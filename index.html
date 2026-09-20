@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sistema de Gerenciamento de Estoque Interno</title>
+<style>
+:root{
+  --primary:#14532d;
+  --primary2:#166534;
+  --light:#f3f7f4;
+  --border:#d8e0db;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --danger:#b91c1c;
+  --warning:#b45309;
+  --white:#fff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  color:var(--text);
+  background:#eef2f0;
+}
+header{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:var(--primary);
+  color:#fff;
+  padding:14px 18px;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+.header-inner{
+  max-width:1400px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+header h1{font-size:20px;margin:0}
+header small{opacity:.85}
+.layout{
+  max-width:1400px;
+  margin:auto;
+  display:flex;
+  min-height:calc(100vh - 66px);
+}
+nav{
+  width:220px;
+  flex:0 0 220px;
+  background:#fff;
+  border-right:1px solid var(--border);
+  padding:14px 10px;
+  position:sticky;
+  top:66px;
+  height:calc(100vh - 66px);
+}
+.nav-btn{
+  display:block;
+  width:100%;
+  text-align:left;
+  text-decoration:none;
+  color:#334155;
+  background:#fff;
+  border:0;
+  border-radius:9px;
+  padding:12px 13px;
+  margin-bottom:6px;
+  font-size:15px;
+  cursor:pointer;
+}
+.nav-btn:hover,.nav-btn.active{
+  background:#e7f2eb;
+  color:var(--primary);
+  font-weight:700;
+}
+main{
+  flex:1;
+  padding:20px;
+  min-width:0;
+}
+.page{display:none}
+.page:target{display:block}
+main:not(:has(.page:target)) #dashboard{display:block}
+
+.card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:18px;
+  margin-bottom:18px;
+  box-shadow:0 1px 3px rgba(0,0,0,.04);
+}
+.card h2,.card h3{margin-top:0}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+}
+.stat{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:18px;
+}
+.stat .label{color:var(--muted);font-size:13px}
+.stat .value{font-size:28px;font-weight:700;margin-top:6px}
+.toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+.toolbar-left,.toolbar-right{display:flex;gap:8px;flex-wrap:wrap}
+button,.btn{
+  border:0;
+  border-radius:8px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-weight:600;
+  text-decoration:none;
+  display:inline-block;
+}
+.btn-primary{background:var(--primary2);color:#fff}
+.btn-secondary{background:#e5e7eb;color:#111827}
+.btn-danger{background:#fee2e2;color:#991b1b}
+input,select{
+  width:100%;
+  padding:10px 11px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  font-size:14px;
+  background:#fff;
+}
+.search{max-width:340px}
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:9px}
+table{width:100%;border-collapse:collapse;min-width:850px;background:#fff}
+th,td{padding:10px 11px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px}
+th{background:#f8faf9;color:#334155;position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+.badge{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+}
+.ok{background:#dcfce7;color:#166534}
+.low{background:#fef3c7;color:#92400e}
+.out{background:#fee2e2;color:#991b1b}
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.form-group label{
+  display:block;
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:5px;
+}
+.form-group.full{grid-column:1/-1}
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+  padding:16px;
+}
+.modal.show{display:flex}
+.modal-box{
+  background:#fff;
+  width:min(760px,100%);
+  max-height:92vh;
+  overflow:auto;
+  border-radius:14px;
+  padding:20px;
+}
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px;
+}
+.modal-head h3{margin:0}
+.close{background:#f1f5f9;font-size:20px;padding:6px 10px}
+.empty{text-align:center;color:var(--muted);padding:25px}
+.alert{
+  padding:12px;
+  border-radius:9px;
+  margin-bottom:10px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+}
+footer{
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+  padding:20px;
+}
+@media(max-width:900px){
+  .layout{display:block}
+  nav{
+    position:sticky;
+    top:66px;
+    width:100%;
+    height:auto;
+    display:flex;
+    overflow-x:auto;
+    gap:6px;
+    border-right:0;
+    border-bottom:1px solid var(--border);
+    padding:8px;
+    z-index:10;
+  }
+  .nav-btn{
+    flex:0 0 auto;
+    width:auto;
+    margin:0;
+    white-space:nowrap;
+  }
+  main{padding:12px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  header h1{font-size:16px}
+  header small{display:none}
+  .grid,.form-grid{grid-template-columns:1fr}
+  .stat .value{font-size:24px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>📦 Sistema de Gerenciamento de Estoque Interno</h1>
+    <small>Controle de materiais, entradas, saídas e notas fiscais</small>
+  </div>
+</header>
+
+<div class="layout">
+<nav aria-label="Navegação principal">
+  <a class="nav-btn" data-page="dashboard" href="#dashboard">📊 Painel</a>
+  <a class="nav-btn" data-page="estoque" href="#estoque">📦 Estoque</a>
+  <a class="nav-btn" data-page="produtos" href="#produtos">🧾 Produtos</a>
+  <a class="nav-btn" data-page="notas" href="#notas">📝 Notas Fiscais</a>
+  <a class="nav-btn" data-page="entradas" href="#entradas">⬇️ Entradas</a>
+  <a class="nav-btn" data-page="saidas" href="#saidas">⬆️ Saídas</a>
+</nav>
+
+<main>
+
+<section id="dashboard" class="page">
+  <div class="toolbar">
+    <div>
+      <h2 style="margin-bottom:4px">Painel</h2>
+      <span style="color:var(--muted)">Visão geral do estoque interno</span>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="stat"><div class="label">Produtos cadastrados</div><div class="value" id="statProdutos">0</div></div>
+    <div class="stat"><div class="label">Itens em estoque</div><div class="value" id="statQuantidade">0</div></div>
+    <div class="stat"><div class="label">Valor do estoque</div><div class="value" id="statValor">R$ 0,00</div></div>
+    <div class="stat"><div class="label">Estoque baixo</div><div class="value" id="statBaixo">0</div></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>⚠️ Materiais abaixo do estoque mínimo</h3>
+    <div id="alertasEstoque"></div>
+  </div>
+</section>
+
+<section id="estoque" class="page">
+  <div class="card">
+    <div class="toolbar">
+      <div><h2>Estoque</h2></div>
+      <input id="buscaEstoque" class="search" placeholder="Pesquisar código ou produto">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Código</th><th>Produto</th><th>Quantidade</th><th>Entradas</th><th>Saídas</th>
+          <th>Estoque mínimo</th><th>Valor estoque</th><th>Centro de custo</th><th>Status</th>
+        </tr></thead>
+        <tbody id="tabelaEstoque"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="produtos" class="page">
+  <div class="card">
+    <div class="toolbar">
+      <div><h2>Produtos</h2></div>
+      <div class="toolbar-right">
+        <input id="buscaProdutos" class="search" placeholder="Pesquisar produto ou código">
+        <button type="button" class="btn btn-primary" id="btnNovoProduto" data-open="modalProduto">+ Novo produto</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Código</th><th>Nome do produto</th><th>Estoque mínimo</th><th>Valor unitário</th><th>Centro de custo</th><th>Ações</th></tr></thead>
+        <tbody id="tabelaProdutos"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="notas" class="page">
+  <div class="card">
+    <div class="toolbar">
+      <div><h2>Controle das Notas Fiscais</h2></div>
+      <div class="toolbar-right">
+        <input id="buscaNotas" class="search" placeholder="Pesquisar nota ou fornecedor">
+        <button type="button" class="btn btn-primary" id="btnNovaNota" data-open="modalNota">+ Nova nota</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nota fiscal</th><th>Data</th><th>Fornecedor</th><th>Valor</th><th>Observação</th><th>Ações</th></tr></thead>
+        <tbody id="tabelaNotas"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="entradas" class="page">
+  <div class="card">
+    <div class="toolbar">
+      <div><h2>Entradas</h2></div>
+      <div class="toolbar-right">
+        <input id="buscaEntradas" class="search" placeholder="Pesquisar requisição, NF ou produto">
+        <button type="button" class="btn btn-primary" id="btnNovaEntrada" data-open="modalEntrada">+ Registrar entrada</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>Req. compra</th><th>Nota fiscal</th><th>Código</th><th>Produto</th><th>Qtd.</th><th>Valor unit.</th><th>Valor total</th><th>Ações</th></tr></thead>
+        <tbody id="tabelaEntradas"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="saidas" class="page">
+  <div class="card">
+    <div class="toolbar">
+      <div><h2>Saídas</h2></div>
+      <div class="toolbar-right">
+        <input id="buscaSaidas" class="search" placeholder="Pesquisar setor, produto ou matrícula">
+        <button type="button" class="btn btn-primary" id="btnNovaSaida" data-open="modalSaida">+ Registrar saída</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Nº saída</th><th>Data</th><th>Setor requisitante</th><th>Centro de custo</th>
+          <th>Código</th><th>Produto</th><th>Qtd.</th><th>Ordem manutenção</th><th>Matrícula</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="tabelaSaidas"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Os dados são armazenados neste dispositivo usando localStorage.</footer>
+</main>
+</div>
+
+<!-- Modal Produto -->
+<div class="modal" id="modalProduto">
+  <div class="modal-box">
+    <div class="modal-head"><h3 id="tituloProduto">Novo produto</h3><button class="close" data-close="modalProduto">×</button></div>
+    <form id="formProduto">
+      <input type="hidden" id="produtoEditIndex">
+      <div class="form-grid">
+        <div class="form-group"><label>Código interno</label><input id="produtoCodigo" required></div>
+        <div class="form-group"><label>Nome do produto</label><input id="produtoNome" required></div>
+        <div class="form-group"><label>Estoque mínimo</label><input id="produtoMinimo" type="number" min="0" step="1" value="0" required></div>
+        <div class="form-group"><label>Valor unitário</label><input id="produtoValor" type="number" min="0" step="0.01" value="0" required></div>
+        <div class="form-group full"><label>Centro de custo do material</label><input id="produtoCentro"></div>
+      </div>
+      <div class="toolbar" style="margin-top:16px;margin-bottom:0">
+        <span></span><div><button type="button" class="btn btn-secondary" data-close="modalProduto">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Nota -->
+<div class="modal" id="modalNota">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Nova nota fiscal</h3><button class="close" data-close="modalNota">×</button></div>
+    <form id="formNota">
+      <div class="form-grid">
+        <div class="form-group"><label>Número da nota fiscal</label><input id="notaNumero" required></div>
+        <div class="form-group"><label>Data</label><input id="notaData" type="date" required></div>
+        <div class="form-group"><label>Fornecedor</label><input id="notaFornecedor" required></div>
+        <div class="form-group"><label>Valor total</label><input id="notaValor" type="number" min="0" step="0.01" value="0"></div>
+        <div class="form-group full"><label>Observação</label><input id="notaObs"></div>
+      </div>
+      <div class="toolbar" style="margin-top:16px;margin-bottom:0"><span></span><div><button type="button" class="btn btn-secondary" data-close="modalNota">Cancelar</button><button class="btn btn-primary">Salvar</button></div></div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Entrada -->
+<div class="modal" id="modalEntrada">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Registrar entrada</h3><button class="close" data-close="modalEntrada">×</button></div>
+    <form id="formEntrada">
+      <div class="form-grid">
+        <div class="form-group"><label>Data da entrada</label><input id="entradaData" type="date" required></div>
+        <div class="form-group"><label>Nº requisição de compra</label><input id="entradaReq" required></div>
+        <div class="form-group"><label>Nº nota fiscal</label><input id="entradaNF" required></div>
+        <div class="form-group"><label>Código do produto</label><select id="entradaProduto" required></select></div>
+        <div class="form-group"><label>Quantidade</label><input id="entradaQtd" type="number" min="1" step="1" required></div>
+        <div class="form-group"><label>Valor unitário da nota</label><input id="entradaValor" type="number" min="0" step="0.01" required></div>
+      </div>
+      <div class="toolbar" style="margin-top:16px;margin-bottom:0"><span id="entradaTotalPreview">Total: R$ 0,00</span><div><button type="button" class="btn btn-secondary" data-close="modalEntrada">Cancelar</button><button class="btn btn-primary">Salvar</button></div></div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Saída -->
+<div class="modal" id="modalSaida">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Registrar saída</h3><button class="close" data-close="modalSaida">×</button></div>
+    <form id="formSaida">
+      <div class="form-grid">
+        <div class="form-group"><label>Nº da saída</label><input id="saidaNumero" required></div>
+        <div class="form-group"><label>Data</label><input id="saidaData" type="date" required></div>
+        <div class="form-group"><label>Setor requisitante</label><input id="saidaSetor" required></div>
+        <div class="form-group"><label>Centro de custo do setor requisitante</label><input id="saidaCentro"></div>
+        <div class="form-group"><label>Código do produto</label><select id="saidaProduto" required></select></div>
+        <div class="form-group"><label>Quantidade</label><input id="saidaQtd" type="number" min="1" step="1" required></div>
+        <div class="form-group"><label>Nº ordem de manutenção</label><input id="saidaOM"></div>
+        <div class="form-group"><label>Matrícula do funcionário</label><input id="saidaMatricula" required></div>
+      </div>
+      <div class="toolbar" style="margin-top:16px;margin-bottom:0"><span id="saidaSaldoPreview"></span><div><button type="button" class="btn btn-secondary" data-close="modalSaida">Cancelar</button><button class="btn btn-primary">Salvar</button></div></div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const KEY = "estoque_interno_v3";
+
+  let db = JSON.parse(localStorage.getItem(KEY) || "null") || {
+    produtos: [],
+    notas: [],
+    entradas: [],
+    saidas: []
+  };
+
+  function save(){
+    localStorage.setItem(KEY, JSON.stringify(db));
+  }
+
+  function esc(v){
+    return String(v ?? "").replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c];
+    });
+  }
+
+  function money(v){
+    return Number(v || 0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  }
+
+  function today(){
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function produtoByCodigo(codigo){
+    return db.produtos.find(p => p.codigo === codigo);
+  }
+
+  function estoqueProduto(codigo){
+    const entradas = db.entradas
+      .filter(e => e.codigo === codigo)
+      .reduce((s,e)=>s+Number(e.qtd||0),0);
+    const saidas = db.saidas
+      .filter(s => s.codigo === codigo)
+      .reduce((s,e)=>s+Number(e.qtd||0),0);
+    return {entradas, saidas, quantidade: entradas-saidas};
+  }
+
+  function renderDashboard(){
+    document.getElementById("statProdutos").textContent = db.produtos.length;
+    let qtd=0, valor=0, baixo=0;
+    const alertas=[];
+    db.produtos.forEach(p=>{
+      const e=estoqueProduto(p.codigo);
+      qtd += e.quantidade;
+      valor += e.quantidade * Number(p.valor||0);
+      if(e.quantidade <= Number(p.minimo||0)){
+        baixo++;
+        alertas.push(`<div class="alert"><strong>${esc(p.codigo)} - ${esc(p.nome)}</strong>: ${e.quantidade} unidade(s), mínimo ${Number(p.minimo||0)}.</div>`);
+      }
+    });
+    document.getElementById("statQuantidade").textContent = qtd;
+    document.getElementById("statValor").textContent = money(valor);
+    document.getElementById("statBaixo").textContent = baixo;
+    document.getElementById("alertasEstoque").innerHTML = alertas.join("") || '<div class="empty">Nenhum material abaixo do estoque mínimo.</div>';
+  }
+
+  function renderEstoque(){
+    const q=(document.getElementById("buscaEstoque").value||"").toLowerCase();
+    const rows=db.produtos.filter(p => (p.codigo+" "+p.nome).toLowerCase().includes(q)).map(p=>{
+      const e=estoqueProduto(p.codigo);
+      const status=e.quantidade<=0?'<span class="badge out">Sem estoque</span>':(e.quantidade<=Number(p.minimo||0)?'<span class="badge low">Baixo</span>':'<span class="badge ok">Normal</span>');
+      return `<tr>
+        <td>${esc(p.codigo)}</td><td>${esc(p.nome)}</td><td>${e.quantidade}</td><td>${e.entradas}</td><td>${e.saidas}</td>
+        <td>${Number(p.minimo||0)}</td><td>${money(e.quantidade*Number(p.valor||0))}</td><td>${esc(p.centro)}</td><td>${status}</td>
+      </tr>`;
+    }).join("");
+    document.getElementById("tabelaEstoque").innerHTML=rows||'<tr><td colspan="9" class="empty">Nenhum produto encontrado.</td></tr>';
+  }
+
+  function renderProdutos(){
+    const q=(document.getElementById("buscaProdutos").value||"").toLowerCase();
+    const rows=db.produtos.map((p,i)=>({p,i})).filter(x=>(x.p.codigo+" "+x.p.nome).toLowerCase().includes(q)).map(({p,i})=>`
+      <tr><td>${esc(p.codigo)}</td><td>${esc(p.nome)}</td><td>${Number(p.minimo||0)}</td><td>${money(p.valor)}</td><td>${esc(p.centro)}</td>
+      <td><button class="btn btn-secondary" data-edit-produto="${i}">Editar</button> <button class="btn btn-danger" data-del-produto="${i}">Excluir</button></td></tr>`).join("");
+    document.getElementById("tabelaProdutos").innerHTML=rows||'<tr><td colspan="6" class="empty">Nenhum produto cadastrado.</td></tr>';
+  }
+
+  function renderNotas(){
+    const q=(document.getElementById("buscaNotas").value||"").toLowerCase();
+    const rows=db.notas.map((n,i)=>({n,i})).filter(x=>(x.n.numero+" "+x.n.fornecedor).toLowerCase().includes(q)).map(({n,i})=>`
+      <tr><td>${esc(n.numero)}</td><td>${esc(n.data)}</td><td>${esc(n.fornecedor)}</td><td>${money(n.valor)}</td><td>${esc(n.obs)}</td>
+      <td><button class="btn btn-danger" data-del-nota="${i}">Excluir</button></td></tr>`).join("");
+    document.getElementById("tabelaNotas").innerHTML=rows||'<tr><td colspan="6" class="empty">Nenhuma nota fiscal cadastrada.</td></tr>';
+  }
+
+  function renderEntradas(){
+    const q=(document.getElementById("buscaEntradas").value||"").toLowerCase();
+    const rows=db.entradas.map((e,i)=>({e,i})).filter(x=>(x.e.req+" "+x.e.nf+" "+x.e.codigo+" "+x.e.nome).toLowerCase().includes(q)).map(({e,i})=>`
+      <tr><td>${esc(e.data)}</td><td>${esc(e.req)}</td><td>${esc(e.nf)}</td><td>${esc(e.codigo)}</td><td>${esc(e.nome)}</td>
+      <td>${e.qtd}</td><td>${money(e.valor)}</td><td>${money(Number(e.qtd)*Number(e.valor))}</td>
+      <td><button class="btn btn-danger" data-del-entrada="${i}">Excluir</button></td></tr>`).join("");
+    document.getElementById("tabelaEntradas").innerHTML=rows||'<tr><td colspan="9" class="empty">Nenhuma entrada registrada.</td></tr>';
+  }
+
+  function renderSaidas(){
+    const q=(document.getElementById("buscaSaidas").value||"").toLowerCase();
+    const rows=db.saidas.map((s,i)=>({s,i})).filter(x=>(x.s.numero+" "+x.s.setor+" "+x.s.codigo+" "+x.s.nome+" "+x.s.matricula).toLowerCase().includes(q)).map(({s,i})=>`
+      <tr><td>${esc(s.numero)}</td><td>${esc(s.data)}</td><td>${esc(s.setor)}</td><td>${esc(s.centro)}</td><td>${esc(s.codigo)}</td>
+      <td>${esc(s.nome)}</td><td>${s.qtd}</td><td>${esc(s.om)}</td><td>${esc(s.matricula)}</td>
+      <td><button class="btn btn-danger" data-del-saida="${i}">Excluir</button></td></tr>`).join("");
+    document.getElementById("tabelaSaidas").innerHTML=rows||'<tr><td colspan="10" class="empty">Nenhuma saída registrada.</td></tr>';
+  }
+
+  function fillProductSelects(){
+    const opts='<option value="">Selecione...</option>'+db.produtos.map(p=>`<option value="${esc(p.codigo)}">${esc(p.codigo)} - ${esc(p.nome)}</option>`).join("");
+    document.getElementById("entradaProduto").innerHTML=opts;
+    document.getElementById("saidaProduto").innerHTML=opts;
+  }
+
+  function renderAll(){
+    renderDashboard(); renderEstoque(); renderProdutos(); renderNotas(); renderEntradas(); renderSaidas(); fillProductSelects();
+  }
+
+  function openModal(id){
+    document.getElementById(id).classList.add("show");
+  }
+  function closeModal(id){
+    document.getElementById(id).classList.remove("show");
+  }
+
+  function syncNavigation(){
+    let hash=location.hash.replace("#","");
+    const valid=["dashboard","estoque","produtos","notas","entradas","saidas"];
+    if(!valid.includes(hash)) hash="dashboard";
+    document.querySelectorAll(".nav-btn").forEach(a=>{
+      a.classList.toggle("active",a.dataset.page===hash);
+    });
+    renderAll();
+  }
+
+  // Navegação robusta: links por hash funcionam mesmo se algum JS de renderização falhar.
+  window.addEventListener("hashchange", syncNavigation);
+
+  document.addEventListener("click", function(ev){
+    const opener=ev.target.closest("[data-open]");
+    if(opener){
+      ev.preventDefault();
+      const modal=opener.dataset.open;
+      const mapa={
+        modalProduto:["formProduto","modalProduto"],
+        modalNota:["formNota","modalNota"],
+        modalEntrada:["formEntrada","modalEntrada"],
+        modalSaida:["formSaida","modalSaida"]
+      };
+      if(mapa[modal]) prepareAndOpen(mapa[modal][0],mapa[modal][1]);
+      return;
+    }
+
+    const close=ev.target.closest("[data-close]");
+    if(close){ closeModal(close.dataset.close); return; }
+
+    const edit=ev.target.closest("[data-edit-produto]");
+    if(edit){
+      const i=Number(edit.dataset.editProduto), p=db.produtos[i];
+      if(!p)return;
+      document.getElementById("produtoEditIndex").value=i;
+      document.getElementById("produtoCodigo").value=p.codigo;
+      document.getElementById("produtoNome").value=p.nome;
+      document.getElementById("produtoMinimo").value=p.minimo;
+      document.getElementById("produtoValor").value=p.valor;
+      document.getElementById("produtoCentro").value=p.centro||"";
+      document.getElementById("tituloProduto").textContent="Editar produto";
+      openModal("modalProduto");
+      return;
+    }
+
+    const delP=ev.target.closest("[data-del-produto]");
+    if(delP){
+      const i=Number(delP.dataset.delProduto);
+      if(confirm("Excluir este produto? As movimentações existentes serão mantidas.")){
+        db.produtos.splice(i,1); save(); renderAll();
+      }
+      return;
+    }
+
+    const delN=ev.target.closest("[data-del-nota]");
+    if(delN){
+      if(confirm("Excluir esta nota fiscal?")){db.notas.splice(Number(delN.dataset.delNota),1);save();renderAll();}
+      return;
+    }
+    const delE=ev.target.closest("[data-del-entrada]");
+    if(delE){
+      if(confirm("Excluir esta entrada? O estoque será recalculado.")){db.entradas.splice(Number(delE.dataset.delEntrada),1);save();renderAll();}
+      return;
+    }
+    const delS=ev.target.closest("[data-del-saida]");
+    if(delS){
+      if(confirm("Excluir esta saída? O estoque será recalculado.")){db.saidas.splice(Number(delS.dataset.delSaida),1);save();renderAll();}
+      return;
+    }
+  });
+
+  function prepareAndOpen(formId, modalId){
+    const form=document.getElementById(formId);
+    if(form) form.reset();
+
+    if(formId==="formProduto"){
+      document.getElementById("produtoEditIndex").value="";
+      document.getElementById("tituloProduto").textContent="Novo produto";
+    }
+    if(formId==="formNota"){
+      document.getElementById("notaData").value=today();
+    }
+    if(formId==="formEntrada"){
+      document.getElementById("entradaData").value=today();
+      document.getElementById("entradaTotalPreview").textContent="Total: R$ 0,00";
+    }
+    if(formId==="formSaida"){
+      document.getElementById("saidaData").value=today();
+      document.getElementById("saidaSaldoPreview").textContent="";
+    }
+    openModal(modalId);
+  }
+
+  // Botões de inserção: usa listeners diretos e também delegação de eventos,
+  // evitando problemas em navegadores móveis e visualizadores de arquivos.
+  document.querySelectorAll("[data-open]").forEach(btn=>{
+    btn.addEventListener("click",function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      const modal=this.dataset.open;
+      const mapa={
+        modalProduto:["formProduto","modalProduto"],
+        modalNota:["formNota","modalNota"],
+        modalEntrada:["formEntrada","modalEntrada"],
+        modalSaida:["formSaida","modalSaida"]
+      };
+      if(mapa[modal]) prepareAndOpen(mapa[modal][0],mapa[modal][1]);
+    });
+  });
+
+  ["buscaEstoque","buscaProdutos","buscaNotas","buscaEntradas","buscaSaidas"].forEach(id=>{
+    document.getElementById(id).addEventListener("input",renderAll);
+  });
+
+  document.getElementById("entradaQtd").addEventListener("input",()=>{
+    const q=Number(document.getElementById("entradaQtd").value||0);
+    const v=Number(document.getElementById("entradaValor").value||0);
+    document.getElementById("entradaTotalPreview").textContent="Total: "+money(q*v);
+  });
+  document.getElementById("entradaValor").addEventListener("input",()=>{
+    const q=Number(document.getElementById("entradaQtd").value||0);
+    const v=Number(document.getElementById("entradaValor").value||0);
+    document.getElementById("entradaTotalPreview").textContent="Total: "+money(q*v);
+  });
+
+  document.getElementById("saidaProduto").addEventListener("change",updateSaidaPreview);
+  document.getElementById("saidaQtd").addEventListener("input",updateSaidaPreview);
+
+  function updateSaidaPreview(){
+    const codigo=document.getElementById("saidaProduto").value;
+    const saldo=codigo?estoqueProduto(codigo).quantidade:0;
+    document.getElementById("saidaSaldoPreview").textContent=codigo?"Saldo disponível: "+saldo:"";
+  }
+
+  document.getElementById("formProduto").addEventListener("submit",function(ev){
+    ev.preventDefault();
+    const i=document.getElementById("produtoEditIndex").value;
+    const obj={
+      codigo:document.getElementById("produtoCodigo").value.trim(),
+      nome:document.getElementById("produtoNome").value.trim(),
+      minimo:Number(document.getElementById("produtoMinimo").value||0),
+      valor:Number(document.getElementById("produtoValor").value||0),
+      centro:document.getElementById("produtoCentro").value.trim()
+    };
+    if(!obj.codigo||!obj.nome)return;
+    const duplicate=db.produtos.some((p,idx)=>p.codigo===obj.codigo && String(idx)!==String(i));
+    if(duplicate){alert("Já existe um produto com este código.");return;}
+    if(i==="") db.produtos.push(obj); else db.produtos[Number(i)]=obj;
+    save(); closeModal("modalProduto"); renderAll();
+  });
+
+  document.getElementById("formNota").addEventListener("submit",function(ev){
+    ev.preventDefault();
+    db.notas.push({
+      numero:document.getElementById("notaNumero").value.trim(),
+      data:document.getElementById("notaData").value,
+      fornecedor:document.getElementById("notaFornecedor").value.trim(),
+      valor:Number(document.getElementById("notaValor").value||0),
+      obs:document.getElementById("notaObs").value.trim()
+    });
+    save(); closeModal("modalNota"); renderAll();
+  });
+
+  document.getElementById("formEntrada").addEventListener("submit",function(ev){
+    ev.preventDefault();
+    const codigo=document.getElementById("entradaProduto").value;
+    const p=produtoByCodigo(codigo);
+    if(!p){alert("Selecione um produto.");return;}
+    db.entradas.push({
+      data:document.getElementById("entradaData").value,
+      req:document.getElementById("entradaReq").value.trim(),
+      nf:document.getElementById("entradaNF").value.trim(),
+      codigo,
+      nome:p.nome,
+      qtd:Number(document.getElementById("entradaQtd").value),
+      valor:Number(document.getElementById("entradaValor").value)
+    });
+    save(); closeModal("modalEntrada"); renderAll();
+  });
+
+  document.getElementById("formSaida").addEventListener("submit",function(ev){
+    ev.preventDefault();
+    const codigo=document.getElementById("saidaProduto").value;
+    const p=produtoByCodigo(codigo);
+    const qtd=Number(document.getElementById("saidaQtd").value||0);
+    const saldo=estoqueProduto(codigo).quantidade;
+    if(!p){alert("Selecione um produto.");return;}
+    if(qtd<=0){alert("Informe uma quantidade válida.");return;}
+    if(qtd>saldo){alert("Quantidade de saída maior que o estoque disponível ("+saldo+").");return;}
+    db.saidas.push({
+      numero:document.getElementById("saidaNumero").value.trim(),
+      data:document.getElementById("saidaData").value,
+      setor:document.getElementById("saidaSetor").value.trim(),
+      centro:document.getElementById("saidaCentro").value.trim(),
+      codigo,
+      nome:p.nome,
+      qtd,
+      om:document.getElementById("saidaOM").value.trim(),
+      matricula:document.getElementById("saidaMatricula").value.trim()
+    });
+    save(); closeModal("modalSaida"); renderAll();
+  });
+
+  document.querySelectorAll(".modal").forEach(m=>{
+    m.addEventListener("click",e=>{ if(e.target===m)m.classList.remove("show"); });
+  });
+
+  document.addEventListener("keydown",function(ev){
+    if(ev.key==="Escape"){
+      document.querySelectorAll(".modal.show").forEach(m=>m.classList.remove("show"));
+    }
+  });
+
+  // Inicialização sem depender de onclick inline.
+  if(!location.hash) history.replaceState(null,"","#dashboard");
+  syncNavigation();
+})();
+</script>
+</body>
+</html>
