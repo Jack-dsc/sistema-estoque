@@ -92,8 +92,26 @@ function fieldsProduct(p={}){return `<div class="formgrid">
 <div><label>Nome do produto</label><input id="pName" value="${esc(p.name)}"></div>
 <div><label>Estoque mínimo</label><input id="pMin" type="number" min="0" value="${p.min??0}"></div>
 <div><label>Centro de custo</label><input id="pCC" value="${esc(p.cc)}"></div></div>`}
-function openProduct(code=''){let p=db.products.find(x=>x.code===code)||{};openModal(code?'Editar produto':'Novo produto',fieldsProduct(p)+`<div class="rowactions"><button class="btn" onclick="saveProduct('${esc(code)}')">Salvar</button></div>`)}
-function saveProduct(old){let code=document.getElementById('pCode').value.trim(),name=document.getElementById('pName').value.trim();if(!code||!name)return alert('Informe código e nome.');if(db.products.some(p=>p.code===code&&code!==old))return alert('Esse código já existe.');let p={code,name,min:Number(document.getElementById('pMin').value||0),cc:document.getElementById('pCC').value.trim()};if(old){let i=db.products.findIndex(x=>x.code===old);db.products[i]=p}else db.products.push(p);closeModal();save()}
+function openProduct(code=''){
+  let p=db.products.find(x=>x.code===code)||{};
+  openModal(code?'Editar produto':'Novo produto',
+    fieldsProduct(p)+`<div class="rowactions"><button type="button" class="btn" id="saveProductBtn">Salvar</button></div>`);
+  document.getElementById('saveProductBtn').onclick=()=>saveProduct(code);
+}
+function saveProduct(old){
+  const codeEl=document.getElementById('pCode'), nameEl=document.getElementById('pName');
+  if(!codeEl||!nameEl){alert('Não foi possível abrir o formulário. Recarregue a página.');return;}
+  const code=codeEl.value.trim(), name=nameEl.value.trim();
+  if(!code||!name){alert('Informe código e nome.');return;}
+  if(db.products.some(p=>p.code===code&&code!==old)){alert('Esse código já existe.');return;}
+  const p={code,name,min:Number(document.getElementById('pMin').value||0),cc:document.getElementById('pCC').value.trim()};
+  if(old){
+    const i=db.products.findIndex(x=>x.code===old);
+    if(i<0){alert('Produto não encontrado.');return;}
+    db.products[i]=p;
+  }else db.products.push(p);
+  closeModal(); save();
+}
 function delProduct(code){if(confirm('Excluir este produto?')){db.products=db.products.filter(p=>p.code!==code);save()}}
 function openNote(){openModal('Nova nota fiscal',`<div class="formgrid"><div><label>Fornecedor</label><input id="nFor"></div><div><label>Número da Nota Fiscal</label><input id="nNum"></div><div><label>Valor em R$</label><input id="nVal" type="number" step="0.01"></div><div><label>Finalidade</label><input id="nPurpose"></div></div><h3>REQs e OCs</h3><div id="reqRows"></div><button class="secondary" onclick="addReqRow()">+ REQ / OC</button><div class="rowactions"><button class="btn" onclick="saveNote()">Salvar</button></div>`);addReqRow()}
 function addReqRow(){let d=document.createElement('div');d.className='rowitem';d.innerHTML=`<div class="formgrid"><div><label>REQ</label><input class="req"></div><div><label>OC</label><input class="oc"></div><div class="rowactions"><button class="danger" onclick="this.parentElement.parentElement.remove()">Remover</button></div></div>`;document.getElementById('reqRows').appendChild(d)}
@@ -108,8 +126,43 @@ function openExit(){openModal('Nova saída',`<div class="formgrid"><div><label>N
 function addExitRow(){let d=document.createElement('div');d.className='rowitem';d.innerHTML=`<div class="formgrid"><div><label>Produto</label>${productSelect('product')}</div><div><label>Quantidade</label><input class="qty" type="number" min="0.001" step="0.001"></div></div><div class="rowactions"><button class="danger" onclick="this.parentElement.parentElement.remove()">Remover</button></div>`;document.getElementById('exitRows').appendChild(d)}
 function saveExit(){let rows=[...document.querySelectorAll('#exitRows .rowitem')].map(r=>({productCode:r.querySelector('.product').value,qty:Number(r.querySelector('.qty').value)})).filter(x=>x.productCode&&x.qty>0);if(!rows.length)return alert('Adicione pelo menos um produto.');for(let r of rows){let p=db.products.find(p=>p.code===r.productCode);if(qty(p)<r.qty)return alert(`Estoque insuficiente para ${p.name}. Disponível: ${qty(p)}`)}db.exits.push({id:Date.now(),number:document.getElementById('xNum').value.trim(),date:document.getElementById('xDate').value,sector:document.getElementById('xSector').value.trim(),cc:document.getElementById('xCC').value.trim(),om:document.getElementById('xOM').value.trim(),reg:document.getElementById('xReg').value.trim(),products:rows});closeModal();save()}
 function delExit(id){if(confirm('Excluir esta saída?')){db.exits=db.exits.filter(x=>x.id!==id);save()}}
-function openInventory(){let rows=db.products.map(p=>`<div class="rowitem"><b>${esc(p.code)} - ${esc(p.name)}</b><div class="muted">Quantidade atual: ${qty(p)}</div><div class="formgrid"><div><label>Nova quantidade física</label><input class="invQty" data-code="${esc(p.code)}" type="number" step="0.001" value="${qty(p)}"></div><div><label>Observação</label><input class="invObs" data-code="${esc(p.code)}"></div></div></div>`).join('');openModal('Inventário',`<p>Informe a quantidade física encontrada. O sistema registrará a diferença como ajuste de inventário.</p><div id="invRows" class="rows">${rows||'<div class="notice">Cadastre produtos primeiro.</div>'}</div><div class="rowactions"><button class="btn" onclick="saveInventory()">Salvar inventário</button></div>`)}
-function saveInventory(){let date=new Date().toISOString().slice(0,10);document.querySelectorAll('.invQty').forEach(i=>{let code=i.dataset.code,p=db.products.find(x=>x.code===code),newQ=Number(i.value),diff=newQ-qty(p);if(diff!==0)db.inventories.push({id:Date.now()+Math.random(),date,code,adjustment:diff,observation:document.querySelector(`.invObs[data-code="${CSS.escape(code)}"]`).value.trim()})});closeModal();save()}
+function openInventory(){
+  const rows=db.products.map(p=>`<div class="rowitem">
+    <b>${esc(p.code)} - ${esc(p.name)}</b>
+    <div class="muted">Quantidade atual: ${qty(p)}</div>
+    <div class="formgrid">
+      <div><label>Nova quantidade física</label>
+        <input class="invQty" data-code="${esc(p.code)}" type="number" min="0" step="0.001" value="${qty(p)}">
+      </div>
+      <div><label>Observação</label>
+        <input class="invObs" data-code="${esc(p.code)}">
+      </div>
+    </div>
+  </div>`).join('');
+  openModal('Inventário',`<p>Informe a quantidade física encontrada. O sistema registrará a diferença como ajuste de inventário.</p>
+    <div id="invRows" class="rows">${rows||'<div class="notice">Cadastre produtos primeiro.</div>'}</div>
+    <div class="rowactions"><button type="button" class="btn" id="saveInventoryBtn">Salvar inventário</button></div>`);
+  document.getElementById('saveInventoryBtn').onclick=saveInventory;
+}
+function saveInventory(){
+  const inputs=[...document.querySelectorAll('#invRows .invQty')];
+  if(!inputs.length){alert('Cadastre pelo menos um produto antes de fazer o inventário.');return;}
+  const date=new Date().toISOString().slice(0,10);
+  let alterados=0;
+  for(const i of inputs){
+    const code=i.dataset.code, p=db.products.find(x=>x.code===code);
+    const newQ=Number(i.value);
+    if(!p || !Number.isFinite(newQ) || newQ<0){alert('Informe quantidades válidas.');return;}
+    const diff=newQ-qty(p);
+    if(diff!==0){
+      const obs=document.querySelector('#invRows .invObs[data-code="'+CSS.escape(code)+'"]');
+      db.inventories.push({id:Date.now()+Math.random(),date,code,adjustment:diff,observation:obs?obs.value.trim():''});
+      alterados++;
+    }
+  }
+  closeModal(); save();
+  alert(alterados ? `Inventário salvo. ${alterados} produto(s) corrigido(s).` : 'Inventário conferido. Nenhuma quantidade precisou ser alterada.');
+}
 function renderAll(){
 let search=(document.getElementById('stockSearch')?.value||'').toLowerCase();let stock=db.products.filter(p=>(p.code+' '+p.name).toLowerCase().includes(search));document.getElementById('stockBody').innerHTML=stock.map(p=>{let q=qty(p),last=db.inventories.filter(i=>i.code===p.code).sort((a,b)=>b.date.localeCompare(a.date))[0],low=q<=Number(p.min);return `<tr class="${last?'corrected':''}${low?' low':''}"><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${q}</td><td>${p.min}</td><td>${money(stockValue(p))}</td><td>${esc(p.cc)}</td><td>${last?`Quantidade corrigida - corrigido por inventário<br><span class="muted">Data: ${last.date}</span>`:(low?'Estoque baixo':'Normal')}</td></tr>`}).join('');
 let ps=(document.getElementById('productSearch')?.value||'').toLowerCase();document.getElementById('productBody').innerHTML=db.products.filter(p=>(p.code+' '+p.name).toLowerCase().includes(ps)).map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${p.min}</td><td>${esc(p.cc)}</td><td><button class="secondary" onclick="openProduct('${esc(p.code)}')">Editar</button> <button class="danger" onclick="delProduct('${esc(p.code)}')">Excluir</button></td></tr>`).join('');
