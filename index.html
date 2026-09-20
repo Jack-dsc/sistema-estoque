@@ -87,7 +87,7 @@ function stockValue(p){return qty(p)*unitCost(p.code)}
 function productName(code){return db.products.find(p=>p.code===code)?.name||code}
 function openModal(title,html){document.getElementById('modalTitle').textContent=title;document.getElementById('modalContent').innerHTML=html;document.getElementById('modal').classList.add('open')}
 function closeModal(){document.getElementById('modal').classList.remove('open')}
-function fieldsProduct(p={}){return `<div class="formgrid">
+function fieldsProduct(p={}){openModal('Novo Produto',`<div class"formgrid">
 <div><label>Código interno</label><input id="pCode" value="${esc(p.code)}"></div>
 <div><label>Nome do produto</label><input id="pName" value="${esc(p.name)}"></div>
 <div><label>Estoque mínimo</label><input id="pMin" type="number" min="0" value="${p.min??0}"></div>
