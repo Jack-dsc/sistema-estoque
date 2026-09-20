@@ -113,61 +113,177 @@ function saveProduct(old){
   closeModal(); save();
 }
 function delProduct(code){if(confirm('Excluir este produto?')){db.products=db.products.filter(p=>p.code!==code);save()}}
-function openNote(){openModal('Nova nota fiscal',`<div class="formgrid"><div><label>Fornecedor</label><input id="nFor"></div><div><label>Número da Nota Fiscal</label><input id="nNum"></div><div><label>Valor em R$</label><input id="nVal" type="number" step="0.01"></div><div><label>Finalidade</label><input id="nPurpose"></div></div><h3>REQs e OCs</h3><div id="reqRows"></div><button class="secondary" onclick="addReqRow()">+ REQ / OC</button><div class="rowactions"><button class="btn" onclick="saveNote()">Salvar</button></div>`);addReqRow()}
-function addReqRow(){let d=document.createElement('div');d.className='rowitem';d.innerHTML=`<div class="formgrid"><div><label>REQ</label><input class="req"></div><div><label>OC</label><input class="oc"></div><div class="rowactions"><button class="danger" onclick="this.parentElement.parentElement.remove()">Remover</button></div></div>`;document.getElementById('reqRows').appendChild(d)}
-function saveNote(){let req=[...document.querySelectorAll('#reqRows .rowitem')].map(r=>({req:r.querySelector('.req').value.trim(),oc:r.querySelector('.oc').value.trim()})).filter(x=>x.req||x.oc);db.notes.push({id:Date.now(),supplier:document.getElementById('nFor').value.trim(),number:document.getElementById('nNum').value.trim(),value:Number(document.getElementById('nVal').value||0),purpose:document.getElementById('nPurpose').value.trim(),reqs:req});closeModal();save()}
-function delNote(id){if(confirm('Excluir esta nota?')){db.notes=db.notes.filter(n=>n.id!==id);save()}}
-function productSelect(cls='product'){return `<select class="${cls}"><option value="">Selecione...</option>${db.products.map(p=>`<option value="${esc(p.code)}">${esc(p.code)} - ${esc(p.name)}</option>`).join('')}</select>`}
-function openEntry(){openModal('Nova entrada',`<div class="formgrid"><div><label>Data</label><input id="eDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Nota Fiscal</label><input id="eNF"></div></div><h3>Produtos / REQs / OCs</h3><div id="entryRows"></div><button class="secondary" onclick="addEntryRow()">+ Produto</button><div class="rowactions"><button class="btn" onclick="saveEntry()">Salvar entrada</button></div>`);addEntryRow()}
-function addEntryRow(){let d=document.createElement('div');d.className='rowitem';d.innerHTML=`<div class="formgrid"><div><label>REQ</label><input class="req"></div><div><label>OC</label><input class="oc"></div><div><label>Produto</label>${productSelect('product')}</div><div><label>Quantidade</label><input class="qty" type="number" min="0.001" step="0.001"></div><div><label>Valor unitário da nota</label><input class="unit" type="number" min="0" step="0.01"></div></div><div class="rowactions"><button class="danger" onclick="this.parentElement.parentElement.remove()">Remover</button></div>`;document.getElementById('entryRows').appendChild(d)}
-function saveEntry(){let rows=[...document.querySelectorAll('#entryRows .rowitem')].map(r=>({req:r.querySelector('.req').value.trim(),oc:r.querySelector('.oc').value.trim(),productCode:r.querySelector('.product').value,qty:Number(r.querySelector('.qty').value),unitValue:Number(r.querySelector('.unit').value)})).filter(x=>x.productCode&&x.qty>0);if(!rows.length)return alert('Adicione pelo menos um produto.');let date=document.getElementById('eDate').value,nf=document.getElementById('eNF').value.trim();rows.forEach(r=>db.entries.push({id:Date.now()+Math.random(),date,nf,...r}));closeModal();save()}
-function delEntry(id){if(confirm('Excluir esta entrada?')){db.entries=db.entries.filter(e=>e.id!==id);save()}}
-function openExit(){openModal('Nova saída',`<div class="formgrid"><div><label>Número da saída</label><input id="xNum"></div><div><label>Data</label><input id="xDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Setor solicitante</label><input id="xSector"></div><div><label>Centro de custo</label><input id="xCC"></div><div><label>Ordem de manutenção</label><input id="xOM"></div><div><label>Matrícula</label><input id="xReg"></div></div><h3>Produtos</h3><div id="exitRows"></div><button class="secondary" onclick="addExitRow()">+ Produto</button><div class="rowactions"><button class="btn" onclick="saveExit()">Salvar saída</button></div>`);addExitRow()}
-function addExitRow(){let d=document.createElement('div');d.className='rowitem';d.innerHTML=`<div class="formgrid"><div><label>Produto</label>${productSelect('product')}</div><div><label>Quantidade</label><input class="qty" type="number" min="0.001" step="0.001"></div></div><div class="rowactions"><button class="danger" onclick="this.parentElement.parentElement.remove()">Remover</button></div>`;document.getElementById('exitRows').appendChild(d)}
-function saveExit(){let rows=[...document.querySelectorAll('#exitRows .rowitem')].map(r=>({productCode:r.querySelector('.product').value,qty:Number(r.querySelector('.qty').value)})).filter(x=>x.productCode&&x.qty>0);if(!rows.length)return alert('Adicione pelo menos um produto.');for(let r of rows){let p=db.products.find(p=>p.code===r.productCode);if(qty(p)<r.qty)return alert(`Estoque insuficiente para ${p.name}. Disponível: ${qty(p)}`)}db.exits.push({id:Date.now(),number:document.getElementById('xNum').value.trim(),date:document.getElementById('xDate').value,sector:document.getElementById('xSector').value.trim(),cc:document.getElementById('xCC').value.trim(),om:document.getElementById('xOM').value.trim(),reg:document.getElementById('xReg').value.trim(),products:rows});closeModal();save()}
-function delExit(id){if(confirm('Excluir esta saída?')){db.exits=db.exits.filter(x=>x.id!==id);save()}}
-function openInventory(){
-  const rows=db.products.map(p=>`<div class="rowitem">
-    <b>${esc(p.code)} - ${esc(p.name)}</b>
-    <div class="muted">Quantidade atual: ${qty(p)}</div>
+function openNote(){
+  openModal('Nova nota fiscal',`
     <div class="formgrid">
-      <div><label>Nova quantidade física</label>
-        <input class="invQty" data-code="${esc(p.code)}" type="number" min="0" step="0.001" value="${qty(p)}">
-      </div>
-      <div><label>Observação</label>
-        <input class="invObs" data-code="${esc(p.code)}">
-      </div>
+      <div><label>Fornecedor</label><input id="nFor"></div>
+      <div><label>Número da Nota Fiscal</label><input id="nNum"></div>
+      <div><label>Valor em R$</label><input id="nVal" type="number" min="0" step="0.01"></div>
+      <div><label>Finalidade</label><input id="nPurpose"></div>
     </div>
-  </div>`).join('');
-  openModal('Inventário',`<p>Informe a quantidade física encontrada. O sistema registrará a diferença como ajuste de inventário.</p>
-    <div id="invRows" class="rows">${rows||'<div class="notice">Cadastre produtos primeiro.</div>'}</div>
-    <div class="rowactions"><button type="button" class="btn" id="saveInventoryBtn">Salvar inventário</button></div>`);
-  document.getElementById('saveInventoryBtn').onclick=saveInventory;
+    <h3>REQs e OCs</h3>
+    <div id="reqRows"></div>
+    <button type="button" class="secondary" id="addReqBtn">+ REQ / OC</button>
+    <div class="rowactions"><button type="button" class="btn" id="saveNoteBtn">Salvar nota fiscal</button></div>`);
+  document.getElementById('addReqBtn').onclick=addReqRow;
+  document.getElementById('saveNoteBtn').onclick=saveNote;
+  addReqRow();
 }
-function saveInventory(){
-  const inputs=[...document.querySelectorAll('#invRows .invQty')];
-  if(!inputs.length){alert('Cadastre pelo menos um produto antes de fazer o inventário.');return;}
-  const date=new Date().toISOString().slice(0,10);
-  let alterados=0;
-  for(const i of inputs){
-    const code=i.dataset.code, p=db.products.find(x=>x.code===code);
-    const newQ=Number(i.value);
-    if(!p || !Number.isFinite(newQ) || newQ<0){alert('Informe quantidades válidas.');return;}
-    const diff=newQ-qty(p);
-    if(diff!==0){
-      const obs=document.querySelector('#invRows .invObs[data-code="'+CSS.escape(code)+'"]');
-      db.inventories.push({id:Date.now()+Math.random(),date,code,adjustment:diff,observation:obs?obs.value.trim():''});
-      alterados++;
+function addReqRow(){
+  const host=document.getElementById('reqRows'); if(!host)return;
+  const d=document.createElement('div'); d.className='rowitem';
+  d.innerHTML=`<div class="formgrid">
+    <div><label>REQ</label><input class="req"></div>
+    <div><label>OC</label><input class="oc"></div>
+  </div>
+  <div class="rowactions"><button type="button" class="danger removeReq">Remover</button></div>`;
+  d.querySelector('.removeReq').onclick=()=>d.remove();
+  host.appendChild(d);
+}
+function saveNote(){
+  const supplier=document.getElementById('nFor').value.trim();
+  const number=document.getElementById('nNum').value.trim();
+  const value=Number(document.getElementById('nVal').value||0);
+  const purpose=document.getElementById('nPurpose').value.trim();
+  if(!supplier||!number){alert('Informe o fornecedor e o número da Nota Fiscal.');return;}
+  const reqs=[...document.querySelectorAll('#reqRows .rowitem')].map(r=>({
+    req:r.querySelector('.req').value.trim(),
+    oc:r.querySelector('.oc').value.trim()
+  })).filter(x=>x.req||x.oc);
+  db.notes.push({id:Date.now()+Math.random(),supplier,number,value,purpose,reqs});
+  closeModal(); save(); alert('Nota fiscal salva com sucesso.');
+}
+function delNote(id){
+  if(confirm('Excluir esta nota fiscal?')){db.notes=db.notes.filter(n=>n.id!==id);save();}
+}
+
+function productSelect(cls='product'){
+  return `<select class="${cls}">
+    <option value="">Selecione...</option>
+    ${db.products.map(p=>`<option value="${esc(p.code)}">${esc(p.code)} - ${esc(p.name)}</option>`).join('')}
+  </select>`;
+}
+function openEntry(){
+  if(!db.products.length){alert('Cadastre pelo menos um produto antes de registrar uma entrada.');return;}
+  openModal('Nova entrada',`
+    <div class="formgrid">
+      <div><label>Data</label><input id="eDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div><label>Nota Fiscal</label><input id="eNF"></div>
+    </div>
+    <h3>Produtos / REQs / OCs</h3>
+    <div id="entryRows"></div>
+    <button type="button" class="secondary" id="addEntryBtn">+ Produto</button>
+    <div class="rowactions"><button type="button" class="btn" id="saveEntryBtn">Salvar entrada</button></div>`);
+  document.getElementById('addEntryBtn').onclick=addEntryRow;
+  document.getElementById('saveEntryBtn').onclick=saveEntry;
+  addEntryRow();
+}
+function addEntryRow(){
+  const host=document.getElementById('entryRows'); if(!host)return;
+  const d=document.createElement('div'); d.className='rowitem';
+  d.innerHTML=`<div class="formgrid">
+    <div><label>REQ</label><input class="req"></div>
+    <div><label>OC</label><input class="oc"></div>
+    <div><label>Produto</label>${productSelect('product')}</div>
+    <div><label>Quantidade</label><input class="qty" type="number" min="0.001" step="0.001"></div>
+    <div><label>Valor unitário da nota</label><input class="unit" type="number" min="0" step="0.01"></div>
+  </div>
+  <div class="rowactions"><button type="button" class="danger removeEntry">Remover</button></div>`;
+  d.querySelector('.removeEntry').onclick=()=>d.remove();
+  host.appendChild(d);
+}
+function saveEntry(){
+  const date=document.getElementById('eDate').value;
+  const nf=document.getElementById('eNF').value.trim();
+  if(!date||!nf){alert('Informe a data e a Nota Fiscal.');return;}
+  const rows=[...document.querySelectorAll('#entryRows .rowitem')].map(r=>({
+    req:r.querySelector('.req').value.trim(),
+    oc:r.querySelector('.oc').value.trim(),
+    productCode:r.querySelector('.product').value,
+    qty:Number(r.querySelector('.qty').value),
+    unitValue:Number(r.querySelector('.unit').value)
+  }));
+  if(!rows.length){alert('Adicione pelo menos um produto.');return;}
+  if(rows.some(r=>!r.productCode||!Number.isFinite(r.qty)||r.qty<=0||!Number.isFinite(r.unitValue)||r.unitValue<0)){
+    alert('Preencha produto, quantidade e valor unitário corretamente.');return;
+  }
+  rows.forEach(r=>db.entries.push({id:Date.now()+Math.random(),date,nf,...r}));
+  closeModal(); save(); alert('Entrada salva com sucesso.');
+}
+function delEntry(id){
+  if(confirm('Excluir esta entrada?')){db.entries=db.entries.filter(e=>e.id!==id);save();}
+}
+
+function openExit(){
+  if(!db.products.length){alert('Cadastre pelo menos um produto antes de registrar uma saída.');return;}
+  openModal('Nova saída',`
+    <div class="formgrid">
+      <div><label>Número da saída</label><input id="xNum"></div>
+      <div><label>Data</label><input id="xDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div><label>Setor solicitante</label><input id="xSector"></div>
+      <div><label>Centro de custo</label><input id="xCC"></div>
+      <div><label>Ordem de manutenção</label><input id="xOM"></div>
+      <div><label>Matrícula</label><input id="xReg"></div>
+    </div>
+    <h3>Produtos</h3>
+    <div id="exitRows"></div>
+    <button type="button" class="secondary" id="addExitBtn">+ Produto</button>
+    <div class="rowactions"><button type="button" class="btn" id="saveExitBtn">Salvar saída</button></div>`);
+  document.getElementById('addExitBtn').onclick=addExitRow;
+  document.getElementById('saveExitBtn').onclick=saveExit;
+  addExitRow();
+}
+function addExitRow(){
+  const host=document.getElementById('exitRows'); if(!host)return;
+  const d=document.createElement('div'); d.className='rowitem';
+  d.innerHTML=`<div class="formgrid">
+    <div><label>Produto</label>${productSelect('product')}</div>
+    <div><label>Quantidade</label><input class="qty" type="number" min="0.001" step="0.001"></div>
+  </div>
+  <div class="rowactions"><button type="button" class="danger removeExit">Remover</button></div>`;
+  d.querySelector('.removeExit').onclick=()=>d.remove();
+  host.appendChild(d);
+}
+function saveExit(){
+  const number=document.getElementById('xNum').value.trim();
+  const date=document.getElementById('xDate').value;
+  if(!number||!date){alert('Informe o número da saída e a data.');return;}
+  const rows=[...document.querySelectorAll('#exitRows .rowitem')].map(r=>({
+    productCode:r.querySelector('.product').value,
+    qty:Number(r.querySelector('.qty').value)
+  }));
+  if(!rows.length){alert('Adicione pelo menos um produto.');return;}
+  if(rows.some(r=>!r.productCode||!Number.isFinite(r.qty)||r.qty<=0)){
+    alert('Preencha produto e quantidade corretamente.');return;
+  }
+  const requested={};
+  rows.forEach(r=>{requested[r.productCode]=(requested[r.productCode]||0)+r.qty;});
+  for(const code of Object.keys(requested)){
+    const p=db.products.find(x=>x.code===code);
+    if(!p || qty(p)<requested[code]){
+      alert(`Estoque insuficiente para ${p?p.name:code}. Disponível: ${p?qty(p):0}`);
+      return;
     }
   }
-  closeModal(); save();
-  alert(alterados ? `Inventário salvo. ${alterados} produto(s) corrigido(s).` : 'Inventário conferido. Nenhuma quantidade precisou ser alterada.');
+  db.exits.push({
+    id:Date.now()+Math.random(),number,date,
+    sector:document.getElementById('xSector').value.trim(),
+    cc:document.getElementById('xCC').value.trim(),
+    om:document.getElementById('xOM').value.trim(),
+    reg:document.getElementById('xReg').value.trim(),
+    products:rows
+  });
+  closeModal(); save(); alert('Saída salva com sucesso.');
 }
+function delExit(id){
+  if(confirm('Excluir esta saída?')){db.exits=db.exits.filter(x=>x.id!==id);save();}
+}
+
 function renderAll(){
 let search=(document.getElementById('stockSearch')?.value||'').toLowerCase();let stock=db.products.filter(p=>(p.code+' '+p.name).toLowerCase().includes(search));document.getElementById('stockBody').innerHTML=stock.map(p=>{let q=qty(p),last=db.inventories.filter(i=>i.code===p.code).sort((a,b)=>b.date.localeCompare(a.date))[0],low=q<=Number(p.min);return `<tr class="${last?'corrected':''}${low?' low':''}"><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${q}</td><td>${p.min}</td><td>${money(stockValue(p))}</td><td>${esc(p.cc)}</td><td>${last?`Quantidade corrigida - corrigido por inventário<br><span class="muted">Data: ${last.date}</span>`:(low?'Estoque baixo':'Normal')}</td></tr>`}).join('');
 let ps=(document.getElementById('productSearch')?.value||'').toLowerCase();document.getElementById('productBody').innerHTML=db.products.filter(p=>(p.code+' '+p.name).toLowerCase().includes(ps)).map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${p.min}</td><td>${esc(p.cc)}</td><td><button class="secondary" onclick="openProduct('${esc(p.code)}')">Editar</button> <button class="danger" onclick="delProduct('${esc(p.code)}')">Excluir</button></td></tr>`).join('');
 let ns=(document.getElementById('noteSearch')?.value||'').toLowerCase();document.getElementById('noteBody').innerHTML=db.notes.filter(n=>(n.supplier+' '+n.number+' '+n.purpose).toLowerCase().includes(ns)).map(n=>`<tr><td>${esc(n.supplier)}</td><td>${esc(n.number)}</td><td>${n.reqs.map(r=>esc(r.req)+(r.oc?' / OC '+esc(r.oc):'')).join('<br>')}</td><td>${money(n.value)}</td><td>${esc(n.purpose)}</td><td><button class="danger" onclick="delNote(${n.id})">Excluir</button></td></tr>`).join('');
-let es=(document.getElementById('entrySearch')?.value||'').toLowerCase();document.getElementById('entryBody').innerHTML=db.entries.filter(e=>(e.nf+' '+e.req+' '+productName(e.productCode)).toLowerCase().includes(es)).map(e=>`<tr><td>${e.date}</td><td>${esc(e.nf)}</td><td>${esc(e.req)}${e.oc?' / OC '+esc(e.oc):''}</td><td>${esc(productName(e.productCode))}</td><td>${e.qty}</td><td>${money(e.unitValue)}</td><td><button class="danger" onclick="delEntry(${e.id})">Excluir</button></td></tr>`).join('');
+let es=(document.getElementById('entrySearch')?.value||'').toLowerCase();document.getElementById('entryBody').innerHTML=db.entries.filter(e=>(e.nf+' '+e.req+' '+e.oc+' '+productName(e.productCode)).toLowerCase().includes(es)).map(e=>`<tr><td>${e.date}</td><td>${esc(e.nf)}</td><td>${esc(e.req)}${e.oc?' / OC '+esc(e.oc):''}</td><td>${esc(productName(e.productCode))}</td><td>${e.qty}</td><td>${money(e.unitValue)}</td><td><button class="danger" onclick="delEntry(${e.id})">Excluir</button></td></tr>`).join('');
 let xs=(document.getElementById('exitSearch')?.value||'').toLowerCase();document.getElementById('exitBody').innerHTML=db.exits.filter(x=>(x.number+' '+x.sector+' '+x.cc).toLowerCase().includes(xs)).map(x=>`<tr><td>${esc(x.number)}</td><td>${x.date}</td><td>${esc(x.sector)}</td><td>${esc(x.cc)}</td><td>${esc(x.om)}</td><td>${esc(x.reg)}</td><td>${x.products.map(p=>esc(productName(p.productCode))+' ('+p.qty+')').join('<br>')}</td><td><button class="danger" onclick="delExit(${x.id})">Excluir</button></td></tr>`).join('');
 let totalQ=db.products.reduce((s,p)=>s+qty(p),0),totalV=db.products.reduce((s,p)=>s+stockValue(p),0),low=db.products.filter(p=>qty(p)<=Number(p.min));document.getElementById('gQtd').textContent=totalQ;document.getElementById('gValor').textContent=money(totalV);document.getElementById('gEntradas').textContent=db.entries.length;document.getElementById('gSaidas').textContent=db.exits.length;document.getElementById('gBaixos').textContent=low.length;document.getElementById('lowBody').innerHTML=low.map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${qty(p)}</td><td>${p.min}</td></tr>`).join('')||'<tr><td colspan="4">Nenhum produto com estoque baixo.</td></tr>';
 document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.getAttribute('href')===location.hash||(location.hash===''&&a.dataset.page==='visao-geral')));
