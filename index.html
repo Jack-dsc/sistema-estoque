@@ -3,13 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sistema de Estoque Interno</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Sistema de Estoque Interno — v2026.09.21.2</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f5f7;color:#17202a}
 header{background:#173b2d;color:#fff;padding:18px 16px;position:sticky;top:0;z-index:20}
 header h1{margin:0;font-size:22px}.wrap{max-width:1200px;margin:auto;padding:14px}
-nav{display:flex;gap:8px;overflow:auto;padding:10px 0}nav a{background:#fff;color:#173b2d;border:1px solid #d5dce0;padding:11px 14px;border-radius:9px;text-decoration:none;white-space:nowrap;font-weight:700}
-nav a.active,.btn{background:#173b2d;color:#fff}.page{display:none}.page:target{display:block}main:not(:has(.page:target)) #visao-geral{display:block}
+nav{display:flex;gap:8px;overflow:auto;padding:10px 0}nav button.nav-btn{background:#fff;color:#173b2d;border:1px solid #d5dce0;padding:11px 14px;border-radius:9px;white-space:nowrap;font-weight:700;cursor:pointer}
+nav button.nav-btn.active,.btn{background:#173b2d;color:#fff}.page{display:none}.page.active-page{display:block}
 .card{background:#fff;border:1px solid #dde3e7;border-radius:12px;padding:16px;margin:12px 0;box-shadow:0 2px 8px #0000000b}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.stat{padding:18px;border-radius:10px;background:#eef4f0}.stat b{display:block;font-size:25px;margin-top:5px}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}button,.btn{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}button.secondary{background:#e8ecef;color:#17202a}button.danger{background:#b42318;color:#fff}
@@ -24,13 +27,13 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 <body>
 <header><div class="wrap"><h1>Sistema de Gerenciamento de Estoque Interno</h1></div></header>
 <div class="wrap">
-<nav>
-<a href="#visao-geral" data-page="visao-geral">Visão Geral</a>
-<a href="#estoque" data-page="estoque">Estoque</a>
-<a href="#produtos" data-page="produtos">Produtos</a>
-<a href="#notas" data-page="notas">Notas Fiscais</a>
-<a href="#entradas" data-page="entradas">Entradas</a>
-<a href="#saidas" data-page="saidas">Saídas</a>
+<nav id="mainNav">
+<button type="button" class="nav-btn active" data-show="visao-geral">Visão Geral</button>
+<button type="button" class="nav-btn" data-show="estoque">Estoque</button>
+<button type="button" class="nav-btn" data-show="produtos">Produtos</button>
+<button type="button" class="nav-btn" data-show="notas">Notas Fiscais</button>
+<button type="button" class="nav-btn" data-show="entradas">Entradas</button>
+<button type="button" class="nav-btn" data-show="saidas">Saídas</button>
 </nav>
 <main>
 <section class="page" id="visao-geral">
@@ -52,22 +55,22 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
 </section>
 
 <section class="page" id="produtos">
-<div class="card"><div class="toolbar"><button class="btn" onclick="openProduct()">Novo produto</button><input id="productSearch" placeholder="Pesquisar produtos..." oninput="renderAll()"></div>
+<div class="card"><div class="toolbar"><button type="button" class="btn" data-action="new-product">Novo produto</button><input id="productSearch" placeholder="Pesquisar produtos..." oninput="renderAll()"></div>
 <div class="scroll"><table><thead><tr><th>Código</th><th>Produto</th><th>Mínimo</th><th>Centro de custo</th><th>Ações</th></tr></thead><tbody id="productBody"></tbody></table></div></div>
 </section>
 
 <section class="page" id="notas">
-<div class="card"><div class="toolbar"><button class="btn" onclick="openNote()">Nova nota fiscal</button><input id="noteSearch" placeholder="Pesquisar notas..." oninput="renderAll()"></div>
+<div class="card"><div class="toolbar"><button type="button" class="btn" data-action="new-note">Nova nota fiscal</button><input id="noteSearch" placeholder="Pesquisar notas..." oninput="renderAll()"></div>
 <div class="scroll"><table><thead><tr><th>Fornecedor</th><th>Nº NF</th><th>REQs e OCs</th><th>Valor (R$)</th><th>Finalidade</th><th>Ações</th></tr></thead><tbody id="noteBody"></tbody></table></div></div>
 </section>
 
 <section class="page" id="entradas">
-<div class="card"><div class="toolbar"><button class="btn" onclick="openEntry()">Nova entrada</button><input id="entrySearch" placeholder="Pesquisar entradas..." oninput="renderAll()"></div>
+<div class="card"><div class="toolbar"><button type="button" class="btn" data-action="new-entry">Nova entrada</button><input id="entrySearch" placeholder="Pesquisar entradas..." oninput="renderAll()"></div>
 <div class="scroll"><table><thead><tr><th>Data</th><th>NF</th><th>REQ / OC</th><th>Produto</th><th>Qtd.</th><th>Valor unit.</th><th>Ações</th></tr></thead><tbody id="entryBody"></tbody></table></div></div>
 </section>
 
 <section class="page" id="saidas">
-<div class="card"><div class="toolbar"><button class="btn" onclick="openExit()">Nova saída</button><input id="exitSearch" placeholder="Pesquisar saídas..." oninput="renderAll()"></div>
+<div class="card"><div class="toolbar"><button type="button" class="btn" data-action="new-exit">Nova saída</button><input id="exitSearch" placeholder="Pesquisar saídas..." oninput="renderAll()"></div>
 <div class="scroll"><table><thead><tr><th>Nº saída</th><th>Data</th><th>Setor</th><th>CC</th><th>Ordem manutenção</th><th>Matrícula</th><th>Produtos</th><th>Ações</th></tr></thead><tbody id="exitBody"></tbody></table></div></div>
 </section>
 </main>
@@ -87,7 +90,7 @@ function stockValue(p){return qty(p)*unitCost(p.code)}
 function productName(code){return db.products.find(p=>p.code===code)?.name||code}
 function openModal(title,html){document.getElementById('modalTitle').textContent=title;document.getElementById('modalContent').innerHTML=html;document.getElementById('modal').classList.add('open')}
 function closeModal(){document.getElementById('modal').classList.remove('open')}
-function fieldsProduct(p={}){openModal('Novo Produto',`<div class"formgrid">
+function fieldsProduct(p={}){return `<div class="formgrid">
 <div><label>Código interno</label><input id="pCode" value="${esc(p.code)}"></div>
 <div><label>Nome do produto</label><input id="pName" value="${esc(p.name)}"></div>
 <div><label>Estoque mínimo</label><input id="pMin" type="number" min="0" value="${p.min??0}"></div>
@@ -279,6 +282,24 @@ function delExit(id){
   if(confirm('Excluir esta saída?')){db.exits=db.exits.filter(x=>x.id!==id);save();}
 }
 
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active-page'));
+  const page=document.getElementById(id);
+  if(page) page.classList.add('active-page');
+  document.querySelectorAll('#mainNav .nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.show===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.addEventListener('click',function(e){
+  const nav=e.target.closest('#mainNav .nav-btn');
+  if(nav){ e.preventDefault(); showPage(nav.dataset.show); return; }
+  const action=e.target.closest('[data-action]')?.dataset.action;
+  if(action==='inventory'){e.preventDefault();openInventory();}
+  else if(action==='new-product'){e.preventDefault();openProduct();}
+  else if(action==='new-note'){e.preventDefault();openNote();}
+  else if(action==='new-entry'){e.preventDefault();openEntry();}
+  else if(action==='new-exit'){e.preventDefault();openExit();}
+});
 function renderAll(){
 let search=(document.getElementById('stockSearch')?.value||'').toLowerCase();let stock=db.products.filter(p=>(p.code+' '+p.name).toLowerCase().includes(search));document.getElementById('stockBody').innerHTML=stock.map(p=>{let q=qty(p),last=db.inventories.filter(i=>i.code===p.code).sort((a,b)=>b.date.localeCompare(a.date))[0],low=q<=Number(p.min);return `<tr class="${last?'corrected':''}${low?' low':''}"><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${q}</td><td>${p.min}</td><td>${money(stockValue(p))}</td><td>${esc(p.cc)}</td><td>${last?`Quantidade corrigida - corrigido por inventário<br><span class="muted">Data: ${last.date}</span>`:(low?'Estoque baixo':'Normal')}</td></tr>`}).join('');
 let ps=(document.getElementById('productSearch')?.value||'').toLowerCase();document.getElementById('productBody').innerHTML=db.products.filter(p=>(p.code+' '+p.name).toLowerCase().includes(ps)).map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${p.min}</td><td>${esc(p.cc)}</td><td><button class="secondary" onclick="openProduct('${esc(p.code)}')">Editar</button> <button class="danger" onclick="delProduct('${esc(p.code)}')">Excluir</button></td></tr>`).join('');
@@ -286,9 +307,9 @@ let ns=(document.getElementById('noteSearch')?.value||'').toLowerCase();document
 let es=(document.getElementById('entrySearch')?.value||'').toLowerCase();document.getElementById('entryBody').innerHTML=db.entries.filter(e=>(e.nf+' '+e.req+' '+e.oc+' '+productName(e.productCode)).toLowerCase().includes(es)).map(e=>`<tr><td>${e.date}</td><td>${esc(e.nf)}</td><td>${esc(e.req)}${e.oc?' / OC '+esc(e.oc):''}</td><td>${esc(productName(e.productCode))}</td><td>${e.qty}</td><td>${money(e.unitValue)}</td><td><button class="danger" onclick="delEntry(${e.id})">Excluir</button></td></tr>`).join('');
 let xs=(document.getElementById('exitSearch')?.value||'').toLowerCase();document.getElementById('exitBody').innerHTML=db.exits.filter(x=>(x.number+' '+x.sector+' '+x.cc).toLowerCase().includes(xs)).map(x=>`<tr><td>${esc(x.number)}</td><td>${x.date}</td><td>${esc(x.sector)}</td><td>${esc(x.cc)}</td><td>${esc(x.om)}</td><td>${esc(x.reg)}</td><td>${x.products.map(p=>esc(productName(p.productCode))+' ('+p.qty+')').join('<br>')}</td><td><button class="danger" onclick="delExit(${x.id})">Excluir</button></td></tr>`).join('');
 let totalQ=db.products.reduce((s,p)=>s+qty(p),0),totalV=db.products.reduce((s,p)=>s+stockValue(p),0),low=db.products.filter(p=>qty(p)<=Number(p.min));document.getElementById('gQtd').textContent=totalQ;document.getElementById('gValor').textContent=money(totalV);document.getElementById('gEntradas').textContent=db.entries.length;document.getElementById('gSaidas').textContent=db.exits.length;document.getElementById('gBaixos').textContent=low.length;document.getElementById('lowBody').innerHTML=low.map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${qty(p)}</td><td>${p.min}</td></tr>`).join('')||'<tr><td colspan="4">Nenhum produto com estoque baixo.</td></tr>';
-document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.getAttribute('href')===location.hash||(location.hash===''&&a.dataset.page==='visao-geral')));
+if(!document.querySelector('.page.active-page')) showPage('visao-geral');
 }
-window.addEventListener('hashchange',renderAll);window.addEventListener('load',renderAll);
+window.addEventListener('load',()=>{showPage('visao-geral');renderAll();});
 document.addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
 </script>
 </body>
