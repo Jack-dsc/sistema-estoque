@@ -6,7 +6,19 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Sistema de Estoque Interno — v2026.09.22.3</title>
+<title>Sistema de Estoque Interno — v2026.09.22.4</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+(function(){
+  function load(src){return new Promise(function(resolve,reject){var s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;document.head.appendChild(s);});}
+  window.ensureXlsx=async function(){
+    if(window.XLSX)return true;
+    var urls=['https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js','https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'];
+    for(var i=0;i<urls.length;i++){try{await load(urls[i]);if(window.XLSX)return true;}catch(e){}}
+    return false;
+  };
+})();
+</script>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f5f7;color:#17202a}
 header{background:#173b2d;color:#fff;padding:10px 12px;position:sticky;top:0;z-index:40;display:none}
@@ -25,11 +37,12 @@ nav button.nav-btn.active,.btn{background:#173b2d;color:#fff}.page{display:none}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.stat{padding:18px;border-radius:10px;background:#eef4f0}.stat b{display:block;font-size:25px;margin-top:5px}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}button,.btn{border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}button.secondary{background:#e8ecef;color:#17202a}button.danger{background:#b42318;color:#fff}
 input,select,textarea{width:100%;padding:10px;border:1px solid #cbd3d8;border-radius:8px;font:inherit}label{font-size:13px;font-weight:700;display:block;margin-bottom:5px}.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e1e5e8;padding:9px;text-align:left;vertical-align:top}th{background:#f5f7f8}.scroll{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+table{table-layout:auto;min-width:760px}table th:last-child,table td:last-child{width:1%;white-space:nowrap}table th:first-child,table td:first-child{white-space:nowrap}table th:nth-child(2),table td:nth-child(2){min-width:120px}table th:nth-child(3),table td:nth-child(3){min-width:90px}th,td{border-bottom:1px solid #e1e5e8;padding:9px;text-align:left;vertical-align:top}th{background:#f5f7f8}.scroll{overflow:auto}
 .low{background:#fff4d6}.corrected{background:#e6f4ea}.muted{color:#68737d}
 .modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:15px;z-index:50}.modal.open{display:flex}.modalbox{background:#fff;border-radius:14px;max-width:900px;width:100%;max-height:92vh;overflow:auto;padding:18px}.modalhead{display:flex;justify-content:space-between;gap:10px;align-items:center}.modalhead h2{margin:0}.rows{display:grid;gap:8px}.rowitem{border:1px solid #dce2e6;border-radius:9px;padding:10px}.rowactions{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}
 .notice{padding:10px;border-radius:8px;background:#eef4f0;margin:8px 0}.error{background:#fde8e7;color:#8a1c13}
-@media(max-width:600px){header h1{font-size:18px}.wrap{padding:9px}th,td{padding:7px;font-size:13px}}
+@media(max-width:600px){header h1{font-size:18px}.wrap{padding:9px}th,td{padding:7px;font-size:13px}.main-home .system-name-home{font-size:22px}}
 
 .table-wrap table tbody tr{border-bottom:1px solid #d9dee7}
 .table-wrap table tbody tr:last-child{border-bottom:0}
@@ -58,19 +71,33 @@ table{border:1px solid #d9dee7;border-radius:8px;overflow:hidden}th,td{border-ri
 .menu-close{float:right;width:36px;height:36px;border:0;background:#eef2f5;border-radius:8px;font-size:25px;line-height:1;cursor:pointer;margin-bottom:8px}
 .menu-panel:after{content:"";display:block;clear:both}
 .main-home{text-align:center;max-width:760px;margin:8vh auto 0}
-.main-home h2{font-size:25px;margin-bottom:8px}.main-home p{color:#68737d}
+.main-home h2{font-size:25px;margin-bottom:8px}.main-home p{color:#68737d}.main-home .system-name-home{font-size:28px;font-weight:800;color:var(--system-accent);margin:0 0 6px}
 .home-grid{display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:14px;margin-top:24px}
 .home-btn{min-height:90px;font-size:17px;border:1px solid #cfd6dd;background:#fff;color:#173b2d;border-radius:12px;padding:14px;font-weight:800;cursor:pointer;box-shadow:0 2px 7px #0000000b}
 .home-btn:hover{background:#eef4f0}
 .back-main{margin-bottom:12px}
 @media(max-width:500px){.home-grid{grid-template-columns:1fr}.main-home{margin-top:4vh}.main-home h2{font-size:22px}}
+.request-approved td{background:#d9f2df!important}.request-denied td{background:#f7d6d6!important}.request-pending td{background:#fff!important}.request-approved,.request-denied,.request-pending{border-bottom:1px solid #cfd6dd}.sector-menu-item{display:block;width:100%;margin:3px 0;text-align:left;border:0;background:#fff;color:#17202a;padding:10px 12px;border-radius:8px;font-weight:700;cursor:pointer}.sector-menu-item:hover{background:#eef2f5}
+
+.purchase-status-open td{background:#fff!important}.purchase-status-partial td{background:#fff3bf!important}.purchase-status-delivered td{background:#d9f2df!important}.budget-changed{font-size:12px;color:#8a5a00;font-weight:700}.mini{font-size:12px;color:#68737d}.print-sheet{border:3px solid #173b2d;border-radius:14px;padding:22px;max-width:900px;margin:auto}.print-sheet h1{color:#173b2d;border-bottom:2px solid #173b2d;padding-bottom:10px}.print-sheet table{border:1px solid #cfd6dd}.print-sheet th{background:#eef4f0;color:#173b2d}.print-sheet .print-head{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #d9dee7;padding-bottom:12px;margin-bottom:14px}
+
+.system-settings-home{position:fixed;top:14px;left:14px;z-index:35;background:#fff;color:#173b2d;border:1px solid #d5dce0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px #00000012}
+.brand-wrap{display:flex;align-items:baseline;gap:12px;min-width:0}.brand-wrap h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.page-title{font-size:13px;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.list-filterbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}.list-filterbar input{max-width:420px}.list-filterbar .filter-label{font-size:13px;font-weight:700;color:#68737d}.list-filterbar .clear-filter{padding:9px 12px}
+@media(max-width:600px){.brand-wrap{display:block}.page-title{font-size:11px}.brand-wrap h1{font-size:16px}.list-filterbar input{max-width:none;flex:1}}
+body.internal-page .system-settings-home{display:none}
+:root{--system-accent:#173b2d;--system-border:#d9dee7;--system-border-width:1px}
+body.system-themed header{background:var(--system-accent)}
+body.system-themed nav button.nav-btn.active,body.system-themed .btn,body.system-themed .home-btn{background:var(--system-accent);color:#fff}
+body.system-themed .home-btn:hover{filter:brightness(.92)}
+body.system-themed .card{border-color:var(--system-border);border-width:var(--system-border-width)}
+body.system-themed table,body.system-themed th,body.system-themed td,.system-themed .rowitem{border-color:var(--system-border)}
 </style>
 </head>
 <body>
 <header>
   <div class="app-header">
     <button type="button" class="hamburger" id="hamburgerBtn" aria-label="Abrir menu" aria-expanded="false"><span>☰</span></button>
-    <h1 id="currentTitle">Sistema de Gerenciamento de Estoque Interno</h1>
+    <div class="brand-wrap"><h1 id="systemBrand">NexGiro SmartStock Sistem</h1><div id="currentTitle" class="page-title"></div></div>
   </div>
 </header>
 <nav id="mainNav" class="main-menu">
@@ -84,7 +111,7 @@ table{border:1px solid #d9dee7;border-radius:8px;overflow:hidden}th,td{border-ri
     <button type="button" class="nav-btn" data-show="entradas" data-group="estoque">Entradas</button>
     <button type="button" class="nav-btn" data-show="saidas" data-group="estoque">Saídas</button>
     <button type="button" class="nav-btn" data-show="setores" data-group="estoque">Setores</button>
-    <button type="button" class="nav-btn" data-show="pedidos-materiais" data-group="estoque">Pedidos</button>
+    <button type="button" class="nav-btn" data-show="estoque-pedidos" data-group="estoque">Pedidos</button>
     <div class="menu-title">Pedidos</div>
     <button type="button" class="nav-btn" data-show="pedidos-geral" data-group="pedidos">Lista de pedidos Geral</button>
     <button type="button" class="nav-btn" data-show="ordens-compra" data-group="pedidos">Ordens de Compras</button>
@@ -92,20 +119,21 @@ table{border:1px solid #d9dee7;border-radius:8px;overflow:hidden}th,td{border-ri
     <button type="button" class="nav-btn" data-show="notas" data-group="notas">Notas Fiscais Gerais</button>
     <button type="button" class="nav-btn" data-show="finalidades" data-group="notas">Finalidades</button>
     <div class="menu-title">Setores Diversos</div>
-    <button type="button" class="nav-btn" data-show="pedidos-materiais" data-group="setores-diversos">Pedidos de Materiais</button>
+    <button type="button" class="nav-btn" data-show="pedidos-materiais" data-group="setores-diversos">Pedidos de Materiais</button><div id="sectorMenuTabs" data-group="setores-diversos"></div>
     <div class="menu-title">Gestão</div>
     <button type="button" class="nav-btn" data-show="gestao-pedidos-aprovacao" data-group="gestao">Pedidos para a aprovação</button>
-    <button type="button" class="nav-btn" data-show="gestao-oc-aprovacao" data-group="gestao">Ordens de Compras Para Aprovação</button>
+    <button type="button" class="nav-btn" data-show="gestao-oc-aprovacao" data-group="gestao">Orçamentos para Aprovação</button>
     <button type="button" class="nav-btn" data-show="gestao-materiais-aprovacao" data-group="gestao">Materiais Para Aprovação</button>
     <button type="button" class="nav-btn" data-show="gestao-lista-pedidos" data-group="gestao">Lista de Pedidos</button>
-    <button type="button" class="nav-btn" data-show="gestao-lista-oc" data-group="gestao">Lista de Ordem de Compra</button>
+    <button type="button" class="nav-btn" data-show="gestao-lista-oc" data-group="gestao">Lista de Orçamentos</button>
     <button type="button" class="nav-btn" data-show="gestao-lista-materiais" data-group="gestao">Lista de Materiais</button>
   </div>
 </nav>
 
 <main>
 <section class="page active" id="principal">
-<div class="card main-home"><h2>Menu Principal</h2><p>Selecione uma área para acessar suas funções.</p><div class="home-grid">
+<button type="button" class="system-settings-home" onclick="openSystemSettings()">⚙ Configurações do Sistema</button>
+<div class="card main-home"><div id="homeSystemName" class="system-name-home">NexGiro SmartStock Sistem</div><h2>Menu Principal</h2><p>Selecione uma área para acessar suas funções.</p><div class="home-grid">
 <button type="button" class="home-btn" data-show="visao-geral">Estoque</button>
 <button type="button" class="home-btn" data-show="pedidos-geral">Pedidos</button>
 <button type="button" class="home-btn" data-show="notas">Notas Fiscais</button>
@@ -136,26 +164,27 @@ table{border:1px solid #d9dee7;border-radius:8px;overflow:hidden}th,td{border-ri
 
 <section class="page" id="produtos">
 <button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
-<div class="card"><div class="toolbar"><button type="button" class="btn" data-action="new-product">Novo produto</button><input id="productSearch" placeholder="Pesquisar produtos..." oninput="renderAll()"></div>
-<div class="scroll"><table><thead><tr><th>Código</th><th>Produto</th><th>Mínimo</th><th>Centro de custo</th><th>Ações</th></tr></thead><tbody id="productBody"></tbody></table></div></div>
+<div class="card"><div class="toolbar"><button type="button" class="btn" data-action="new-product">Novo produto</button><button type="button" class="secondary" data-action="import-xlsx">Importar Excel (.xlsx)</button><input id="productSearch" placeholder="Pesquisar produtos..." oninput="renderAll()"></div>
+<div class="scroll"><table><thead><tr><th>Código</th><th>Produto</th><th>Unidade</th><th>Mínimo</th><th>Centro de custo</th><th>Ações</th></tr></thead><tbody id="productBody"></tbody></table></div></div>
+<div class="card"><h2>Importação de estoque por Excel</h2><p class="muted">Envie uma planilha .xlsx. O sistema pode criar/atualizar Produtos e lançar a quantidade inicial no estoque.</p><button type="button" class="btn" data-action="import-xlsx">Selecionar planilha Excel</button><div id="xlsxImportInfo" class="notice" style="display:none"></div></div>
 </section>
 
 <section class="page" id="notas">
 <button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
 <div class="card"><div class="toolbar"><button type="button" class="btn" data-action="new-note">Nova nota fiscal</button><input id="noteSearch" placeholder="Pesquisar notas..." oninput="renderAll()"></div>
-<div class="scroll"><table><thead><tr><th>Fornecedor</th><th>Nº NF</th><th>REQs e OCs</th><th>Valor (R$)</th><th>Finalidade</th><th>Ações</th></tr></thead><tbody id="noteBody"></tbody></table></div></div>
+<div class="scroll"><table><thead><tr><th>Fornecedor</th><th>Nº NF</th><th>REQs</th><th>OCs</th><th>Valor (R$)</th><th>Finalidade</th><th>Ações</th></tr></thead><tbody id="noteBody"></tbody></table></div></div>
 </section>
 
 <section class="page" id="entradas">
 <button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
 <div class="card"><div class="toolbar"><button type="button" class="btn" data-action="new-entry">Nova entrada</button><input id="entrySearch" placeholder="Pesquisar entradas..." oninput="renderAll()"></div>
-<div class="scroll"><table><thead><tr><th>Data</th><th>NF</th><th>Fornecedor</th><th>REQ</th><th>OC</th><th>Produto</th><th>Qtd.</th><th>Valor unit.</th><th>Valor total</th><th>Ações</th></tr></thead><tbody id="entryBody"></tbody></table></div></div>
+<div class="scroll"><table><thead><tr><th>Data</th><th>NF</th><th>Fornecedor</th><th>REQ</th><th>OC</th><th>Produto</th><th>Quantidade</th><th>Valor unit.</th><th>Valor total</th><th>Ações</th></tr></thead><tbody id="entryBody"></tbody></table></div></div>
 </section>
 
 <section class="page" id="saidas">
 <button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
 <div class="card"><div class="toolbar"><button type="button" class="btn" data-action="new-exit">Nova saída</button><input id="exitSearch" placeholder="Pesquisar saídas..." oninput="renderAll()"></div>
-<div class="scroll"><table><thead><tr><th>Nº saída</th><th>Data</th><th>Setor</th><th>CC</th><th>Ordem manutenção</th><th>Código</th><th>Produto</th><th>Quantidade</th><th>Ações</th><th>Matrícula</th></tr></thead><tbody id="exitBody"></tbody></table></div></div>
+<div class="scroll"><table><thead><tr><th>Nº saída</th><th>Data</th><th>Setor</th><th>Centro de custos</th><th>Código</th><th>Produto</th><th>Quantidade</th><th>Ordem de manutenção</th><th>Matrícula</th><th>Ações</th></tr></thead><tbody id="exitBody"></tbody></table></div></div>
 </section>
 
 <section class="page" id="setores">
@@ -164,6 +193,46 @@ table{border:1px solid #d9dee7;border-radius:8px;overflow:hidden}th,td{border-ri
 <div class="toolbar"><button type="button" class="btn" data-action="new-sector">Novo setor</button><input id="sectorSearch" placeholder="Pesquisar setores..." oninput="renderAll()"></div>
 <div class="scroll"><table><thead><tr><th>Setor</th><th>Centro de custo</th><th>Ações</th></tr></thead><tbody id="sectorBody"></tbody></table></div>
 </div>
+</section>
+<section class="page" id="estoque-pedidos">
+<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
+<div class="card"><h2>Pedidos</h2><div class="scroll"><table><thead><tr><th>Código do pedido</th><th>Data</th><th>Setor</th><th>Material</th><th>Quantidade</th><th>Ordem de Manutenção</th><th>Status</th><th>Impressão</th></tr></thead><tbody id="stockOrdersBody"></tbody></table></div></div>
+</section>
+<section class="page" id="pedidos-materiais">
+<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
+<div class="card"><h2>Pedidos de Materiais</h2><p class="muted">Cada setor cadastrado em Estoque → Setores possui uma aba própria no menu lateral.</p><div id="sectorLandingBody"></div></div>
+</section>
+<section class="page" id="gestao-materiais-aprovacao">
+<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
+<div class="card"><h2>Materiais Para Aprovação</h2><div class="scroll"><table><thead><tr><th>Data</th><th>Setor</th><th>Material</th><th>Quantidade</th><th>Ordem de Manutenção</th><th>Ações</th></tr></thead><tbody id="approvalMaterialsBody"></tbody></table></div></div>
+</section>
+<section class="page" id="gestao-lista-materiais">
+<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
+<div class="card"><h2>Lista de Materiais</h2><div class="scroll"><table><thead><tr><th>Código do pedido</th><th>Data</th><th>Setor</th><th>Material</th><th>Quantidade</th><th>Ordem de Manutenção</th><th>Status</th><th>Impressão</th></tr></thead><tbody id="managementMaterialsBody"></tbody></table></div></div>
+</section>
+<section class="page" id="gestao-pedidos-aprovacao">
+<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
+<div class="card"><h2>Pedidos para Aprovação</h2><div class="scroll"><table><thead><tr><th>Nº Pedido</th><th>Data</th><th>Setor</th><th>Centro de Custo</th><th>Materiais</th><th>Status</th><th>Ações</th></tr></thead><tbody id="reqApprovalBody"></tbody></table></div></div>
+</section>
+<section class="page" id="gestao-oc-aprovacao">
+<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
+<div class="card"><h2>Orçamentos para Aprovação</h2><div class="scroll"><table><thead><tr><th>REQ</th><th>Data</th><th>Setor</th><th>Materiais</th><th>Empresas</th><th>Ações</th></tr></thead><tbody id="budgetApprovalBody"></tbody></table></div></div>
+</section>
+<section class="page" id="gestao-lista-pedidos">
+<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
+<div class="card"><h2>Lista de Pedidos</h2><div class="scroll"><table><thead><tr><th>Nº Pedido</th><th>Data</th><th>Setor</th><th>Centro de Custo</th><th>Materiais</th><th>Status</th><th>Ações</th></tr></thead><tbody id="reqManagementListBody"></tbody></table></div></div>
+</section>
+<section class="page" id="gestao-lista-oc">
+<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
+<div class="card"><h2>Lista de Orçamentos</h2><div class="scroll"><table><thead><tr><th>REQ</th><th>Data</th><th>Materiais / Empresas</th><th>Status</th><th>Ações</th></tr></thead><tbody id="budgetListBody"></tbody></table></div></div>
+</section>
+<section class="page" id="pedidos-geral">
+<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
+<div class="card"><div class="toolbar"><h2>Lista de Pedidos</h2><button type="button" class="btn" data-action="new-req">Nova REQ</button><button type="button" class="secondary" data-action="new-req-diversa">Nova REQ Diversa</button></div><div class="scroll"><table><thead><tr><th>Nº do Pedido</th><th>Data</th><th>Setor</th><th>Centro de Custo</th><th>Materiais</th><th>Status</th><th>Ações</th></tr></thead><tbody id="reqBody"></tbody></table></div></div>
+</section>
+<section class="page" id="ordens-compra">
+<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
+<div class="card"><div class="toolbar"><h2>Ordens de Compras</h2><button type="button" class="btn" data-action="new-purchase-order">Nova OC</button><button type="button" class="secondary" data-action="new-purchase-order-diversa">Nova OC Diversa</button></div><div class="scroll"><table><thead><tr><th>Nº OC</th><th>Data</th><th>Empresa</th><th>Centro de Custos</th><th>REQs</th><th>Materiais</th><th>Status</th><th>Ações</th></tr></thead><tbody id="purchaseOrdersBody"></tbody></table></div></div>
 </section>
 <section class="page" id="finalidades">
 <button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button>
@@ -179,9 +248,15 @@ table{border:1px solid #d9dee7;border-radius:8px;overflow:hidden}th,td{border-ri
 
 <script>
 const KEY='estoque_interno_v3';
-let db=JSON.parse(localStorage.getItem(KEY)||'null')||{products:[],notes:[],entries:[],exits:[],inventories:[],sectors:[],purposes:[]};
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||{products:[],notes:[],entries:[],exits:[],inventories:[],sectors:[],purposes:[],materialRequests:[]};
 db.sectors=db.sectors||[];
 db.purposes=db.purposes||[];
+db.materialRequests=db.materialRequests||[];
+db.purchaseRequests=db.purchaseRequests||[];
+db.purchaseOrders=db.purchaseOrders||[];
+db.products.forEach(p=>{if(!p.unit)p.unit='UN';});
+db.entries.forEach((e,i)=>{if(!e.createdAt)e.createdAt=Date.now()+i;});
+db.notes.forEach((n,i)=>{if(!n.createdAt)n.createdAt=Date.now()+i;});
 db.products.forEach(p=>{if(!p.cc)p.cc='00.00-000';});
 db.entries.forEach(e=>{if(e.supplier==null)e.supplier='';});
 
@@ -199,7 +274,7 @@ function formatCC(v){let d=String(v||'').replace(/\D/g,'').slice(0,7);let a=d.sl
 function formatOM(v){let d=String(v||'').replace(/\D/g,'').slice(0,9);return d.replace(/^(\d{0,3})(\d{0,3})(\d{0,3}).*$/,(m,a,b,c)=>[a,b,c].filter(Boolean).join('.'))}
 function formatNF(v){const d=String(v||'').replace(/\D/g,'').slice(0,12);return d?Number(d).toLocaleString('pt-BR',{maximumFractionDigits:0}):''}
 function formatDate(v){if(!v)return '';const s=String(v);if(/^\d{4}-\d{2}-\d{2}$/.test(s)){const [y,m,d]=s.split('-');return `${d}/${m}/${y}`}return s}
-function purposeSelect(selected=''){const ps=[...db.purposes].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));return `<select id="nPurpose"><option value="">Selecione...</option>${ps.map(p=>`<option value="${esc(p.name)}" ${p.name===selected?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`}
+function purposeSelect(selected=''){const ps=[...db.purposes].sort((a,b)=>b.name.localeCompare(a.name,'pt-BR'));return `<select id="nPurpose"><option value="">Selecione...</option>${ps.map(p=>`<option value="${esc(p.name)}" ${p.name===selected?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`}
 function digits(v){return String(v||'').replace(/\D/g,'')}
 function parseMoney(v){
   let s=String(v??'').trim().replace(/R\$\s?/g,'').replace(/\s/g,'');
@@ -234,12 +309,14 @@ function applyMasks(){
   document.querySelectorAll('#nVal, .unit').forEach(el=>{
     if(el.dataset.moneyBound) return;
     el.dataset.moneyBound='1'; el.inputMode='numeric'; el.type='text';
-    el.addEventListener('input',()=>el.value=money(parseMoney(el.value)));
-    el.value=money(parseMoney(el.value));
+    el.addEventListener('input',()=>{
+      const raw=el.value;
+      el.dataset.rawMoney=raw;
+    });
   });
 }
 function qty(p){let q=db.entries.filter(e=>e.productCode===p.code).reduce((s,e)=>s+Number(e.qty),0)-db.exits.flatMap(x=>x.products||[]).filter(e=>e.productCode===p.code).reduce((s,e)=>s+Number(e.qty),0);q+=db.inventories.filter(i=>i.code===p.code).reduce((s,i)=>s+Number(i.adjustment),0);return q}
-function unitCost(code){let a=db.entries.filter(e=>e.productCode===code&&Number(e.qty)>0);let q=a.reduce((s,e)=>s+Number(e.qty),0);return q?a.reduce((s,e)=>s+Number(e.qty)*Number(e.unitValue),0)/q:0}
+function unitCost(code){let a=db.entries.filter(e=>e.productCode===code&&Number(e.qty)>0);let q=a.reduce((s,e)=>s+Number(e.qty),0);if(q)return a.reduce((s,e)=>s+Number(e.qty)*Number(e.unitValue),0)/q;const p=db.products.find(x=>String(x.code)===String(code));return Number(p?.unitValue||0)}
 function stockValue(p){return qty(p)*unitCost(p.code)}
 function productName(code){return db.products.find(p=>p.code===code)?.name||code}
 function openModal(title,html){document.getElementById('modalTitle').textContent=title;document.getElementById('modalContent').innerHTML=html;document.getElementById('modal').classList.add('open');applyMasks()}
@@ -364,7 +441,6 @@ function openSector(code=''){
     <div class="formgrid">
       <div><label>Nome do setor</label><input id="sName" value="${esc(s.name||'')}"></div>
       <div><label>Centro de custo do setor</label><input id="sCC" class="sector-cc" inputmode="numeric" value="${esc(formatCC(s.cc)||'')}"></div>
-      <div><label>Matrícula do setor</label><input id="sReg" inputmode="numeric" value="${esc(digits(s.reg)||'')}"></div>
     </div>
     <div class="rowactions"><button type="button" class="btn" id="saveSectorBtn">Salvar setor</button></div>`);
   document.getElementById('saveSectorBtn').onclick=()=>saveSector(code);
@@ -372,17 +448,18 @@ function openSector(code=''){
 function saveSector(oldCode=''){
   const name=document.getElementById('sName').value.trim();
   const cc=formatCC(document.getElementById('sCC').value.trim());
-  const reg=digits(document.getElementById('sReg').value.trim());
   if(!name||!cc||cc.length<8){alert('Informe o nome e o centro de custo completo do setor.');return;}
   if(db.sectors.some(s=>s.name.trim().toLowerCase()===name.toLowerCase() && s.code!==oldCode)){alert('Esse setor já está cadastrado.');return;}
-  const obj={code:oldCode||('SEC-'+Date.now()),name,cc,reg};
+  const oldReg=oldCode?(db.sectors.find(s=>s.code===oldCode)?.reg||''):'';
+  const obj={code:oldCode||('SEC-'+Date.now()),name,cc};
+  if(oldReg) obj.reg=oldReg;
   if(oldCode){const i=db.sectors.findIndex(s=>s.code===oldCode);if(i>=0)db.sectors[i]=obj;}
   else db.sectors.push(obj);
   closeModal();save();
 }
 function delSector(code){if(confirm('Excluir este setor?')){db.sectors=db.sectors.filter(s=>s.code!==code);save();}}
 function sectorSelect(){
-  const sectors=[...db.sectors].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+  const sectors=[...db.sectors].sort((a,b)=>b.name.localeCompare(a.name,'pt-BR'));
   return `<select id="xSector"><option value="">Selecione o setor...</option>${sectors.map(s=>`<option value="${esc(s.code)}">${esc(s.name)}</option>`).join('')}</select>`;
 }
 function refreshExitProductRows(){
@@ -390,7 +467,6 @@ function refreshExitProductRows(){
   const sector=db.sectors.find(s=>s.code===sectorCode);
   const cc=sector?formatCC(sector.cc):'';
   document.getElementById('xCC').value=cc;
-  const reg=sector?digits(sector.reg):'';
   document.querySelectorAll('#exitRows .rowitem').forEach(row=>{
     const select=row.querySelector('.product');
     const current=select.value;
@@ -400,8 +476,6 @@ function refreshExitProductRows(){
     newSelect.onchange=()=>{const p=db.products.find(x=>x.code===newSelect.value);row.querySelector('.product-code-view').value=p?.code||'';};
     const pNow=db.products.find(x=>x.code===newSelect.value);
     row.querySelector('.product-code-view').value=pNow?.code||'';
-    const mat=row.querySelector('.exit-reg');
-    if(mat && !mat.value) mat.value=reg;
   });
 }
 function addExitRow(){
@@ -422,73 +496,107 @@ function addExitRow(){
   };
   d.querySelector('.removeExit').onclick=()=>d.remove();
   host.appendChild(d);
-  const sector=db.sectors.find(s=>s.code===(document.getElementById('xSector')?.value||''));
-  if(sector)d.querySelector('.exit-reg').value=digits(sector.reg);
 }
-function openExit(){
-  if(!db.products.length){alert('Cadastre pelo menos um produto antes de registrar uma saída.');return;}
-  if(!db.sectors.length){alert('Cadastre pelo menos um setor antes de registrar uma saída.');return;}
-  openModal('Nova saída',`
+
+function year2(){return String(new Date().getFullYear()).slice(-2)}
+function exitNumberDisplay(n){const d=digits(String(n||'')).slice(0,4).padStart(4,'0');return d+'/'+year2()}
+function year2(){return String(new Date().getFullYear()).slice(-2)}
+function exitNumberDisplay(n){const d=digits(String(n||'')).slice(0,4).padStart(4,'0');return d+'/'+year2()}
+function nextExitNumber(){
+  let max=0;
+  db.exits.forEach(x=>{const d=digits(String(x.number||'')).slice(0,4);const n=parseInt(d,10);if(Number.isFinite(n)&&n>max)max=n;});
+  return String(max+1).padStart(4,'0')+'/'+year2();
+}
+function safeSectorId(code){return 'pedido-setor-'+String(code||'').replace(/[^a-zA-Z0-9_-]/g,'_')}
+function randomRequestCode(){
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; let out='';
+  do{out='';for(let i=0;i<7;i++)out+=chars[Math.floor(Math.random()*chars.length)];}while(db.materialRequests.some(r=>r.uniqueCode===out));
+  return out;
+}
+function requestStatusLabel(r){return r.status==='approved'?'Aprovada':r.status==='denied'?'Negada':'Pendente'}
+function requestStatusClass(r){return r.status==='approved'?'request-approved':r.status==='denied'?'request-denied':'request-pending'}
+function materialRowsForRequest(r){return (r.products||[]).map(p=>`${esc(productName(p.productCode))} (${padNumber(p.qty,2)})`).join('<br>')}
+function openMaterialRequestForm(sectorCode){
+  const sector=db.sectors.find(s=>s.code===sectorCode); if(!sector){alert('Setor não encontrado.');return;}
+  if(!db.products.length){alert('Cadastre produtos antes de criar uma requisição.');return;}
+  openModal('Requisição de Material - '+sector.name,`
     <div class="formgrid">
-      <div><label>Número da saída</label><input id="xNum" value="${nextExitNumber()}" readonly></div>
-      <div><label>Data</label><input id="xDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
-      <div><label>Setor solicitante</label>${sectorSelect()}</div>
-      <div><label>Centro de custo</label><input id="xCC" class="sector-cc" inputmode="numeric" readonly value=""></div>
-      <div><label>Ordem de manutenção</label><input id="xOM" inputmode="numeric"></div>
+      <div><label>Data</label><input id="mrDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div><label>Setor</label><input value="${esc(sector.name)}" readonly></div>
+      <div><label>Centro de custos</label><input id="mrCC" value="${esc(formatCC(sector.cc))}" readonly></div>
+      <div><label>Ordem de Manutenção</label><input id="mrOM" inputmode="numeric"></div>
     </div>
-    <h3>Produtos</h3>
-    <div class="notice">O produto pode ser do centro de custo do setor ou do centro de custo padrão <b>00.00-000</b> (uso livre). A matrícula é informada por produto.</div>
-    <div id="exitRows"></div>
-    <button type="button" class="secondary" id="addExitBtn">+ Produto</button>
-    <div class="rowactions"><button type="button" class="btn" id="saveExitBtn">Salvar saída</button></div>`);
-  document.getElementById('xSector').onchange=()=>{refreshExitProductRows();};
-  document.getElementById('addExitBtn').onclick=addExitRow;
-  document.getElementById('saveExitBtn').onclick=saveExit;
-  addExitRow();
+    <div class="notice">Até 20 materiais. Informe a matrícula de cada material; qualquer número é permitido.</div>
+    <div id="mrRows"></div>
+    <button type="button" class="secondary" id="addMrBtn">+ Material</button>
+    <div class="rowactions"><button type="button" class="btn" id="saveMrBtn">Enviar para aprovação</button></div>`);
+  const add=()=>{
+    const host=document.getElementById('mrRows'); if(!host||host.children.length>=20){if(host)alert('O limite é de 20 produtos por requisição.');return;}
+    const d=document.createElement('div');d.className='rowitem';
+    d.innerHTML=`<div class="exit-product-grid"><div><label>Código</label><input class="mr-code" readonly></div><div><label>Material</label>${productSelectFiltered('mr-product',formatCC(sector.cc))}</div><div><label>Quantidade</label><input class="mr-qty" type="number" min="0.001" step="0.001"></div><div><label>Matrícula</label><input class="mr-reg" inputmode="numeric" value=""></div></div><div class="rowactions"><button type="button" class="danger removeMr">Remover</button></div>`;
+    const sel=d.querySelector('.mr-product');sel.onchange=()=>{const p=db.products.find(x=>x.code===sel.value);d.querySelector('.mr-code').value=p?.code||''};d.querySelector('.removeMr').onclick=()=>d.remove();host.appendChild(d);
+  };
+  document.getElementById('addMrBtn').onclick=add;document.getElementById('saveMrBtn').onclick=()=>saveMaterialRequest(sectorCode);add();
 }
-function saveExit(){
-  const number=digits(document.getElementById('xNum').value).padStart(4,'0');
-  const date=document.getElementById('xDate').value;
-  const sectorCode=document.getElementById('xSector').value;
-  const sector=db.sectors.find(s=>s.code===sectorCode);
-  const cc=sector?formatCC(sector.cc):'';
-  if(!number||!date||!sector){alert('Informe a data e selecione o setor.');return;}
-  if(db.exits.some(x=>String(x.number||'').trim()===number)){alert(`O número da saída ${number} já existe. Abra uma nova saída para gerar outro número.`);return;}
-  const rows=[...document.querySelectorAll('#exitRows .rowitem')].map(r=>({
-    productCode:r.querySelector('.product').value,
-    qty:Number(r.querySelector('.qty').value),
-    reg:digits(r.querySelector('.exit-reg').value)
-  }));
-  if(!rows.length){alert('Adicione pelo menos um produto.');return;}
-  if(rows.some(r=>!r.productCode||!Number.isFinite(r.qty)||r.qty<=0||!r.reg)){
-    alert('Preencha código/produto, quantidade e matrícula de cada item.');return;
-  }
-  for(const r of rows){
-    const p=db.products.find(x=>x.code===r.productCode);
-    const pcc=formatCC(p?.cc)||'00.00-000';
-    if(pcc!=='00.00-000' && pcc!==cc){alert(`O produto ${p?.name||r.productCode} pertence ao centro de custo ${pcc} e não pode ser retirado pelo setor ${sector.name}.`);return;}
-  }
-  const requested={};
-  rows.forEach(r=>{requested[r.productCode]=(requested[r.productCode]||0)+r.qty;});
-  for(const code of Object.keys(requested)){
-    const p=db.products.find(x=>x.code===code);
-    if(!p || qty(p)<requested[code]){alert(`Estoque insuficiente para ${p?p.name:code}. Disponível: ${p?qty(p):0}`);return;}
-  }
-  db.exits.push({id:Date.now()+Math.random(),number,date,sector:sector.name,sectorCode,cc,om:formatOM(document.getElementById('xOM').value.trim()),products:rows});
-  closeModal();save();alert('Saída salva com sucesso.');
+function saveMaterialRequest(sectorCode){
+  const sector=db.sectors.find(s=>s.code===sectorCode); const rows=[...document.querySelectorAll('#mrRows .rowitem')].map(r=>({productCode:r.querySelector('.mr-product').value,qty:Number(r.querySelector('.mr-qty').value),reg:digits(r.querySelector('.mr-reg').value)}));
+  if(!sector||!rows.length){alert('Adicione pelo menos um material.');return;}
+  if(rows.length>20){alert('O limite é de 20 produtos.');return;}
+  if(rows.some(r=>!r.productCode||!Number.isFinite(r.qty)||r.qty<=0||!r.reg)){alert('Preencha material, quantidade e matrícula. A matrícula pode ser qualquer número.');return;}
+  const date=document.getElementById('mrDate').value; const om=formatOM(document.getElementById('mrOM').value); if(!date){alert('Informe a data.');return;}
+  db.materialRequests.push({id:Date.now()+Math.random(),createdAt:Date.now(),date,sectorCode,sector:sector.name,cc:formatCC(sector.cc),om,products:rows,status:'pending',correctedByManagement:false,uniqueCode:'',used:false});
+  closeModal();save();alert('Requisição enviada para aprovação da Gestão.');
 }
+function openMaterialRequest(id,management=false){
+  const r=db.materialRequests.find(x=>x.id==id);if(!r)return;
+  const sector=db.sectors.find(s=>s.code===r.sectorCode);
+  const rows=(r.products||[]).map((p,i)=>`<div class="rowitem"><div class="exit-product-grid"><div><label>Código</label><input value="${esc(p.productCode)}" class="corr-code" data-i="${i}" ${management?'':'readonly'}></div><div><label>Material</label><input value="${esc(productName(p.productCode))}" readonly></div><div><label>Quantidade</label><input value="${esc(p.qty)}" class="corr-qty" data-i="${i}" type="number" min="0.001" ${management?'':'readonly'}></div><div><label>Matrícula</label><input value="${esc(p.reg||sector?.reg||'')}" class="corr-reg" data-i="${i}" inputmode="numeric" ${management?'':'readonly'}></div></div></div>`).join('');
+  openModal('Requisição de Material - '+r.sector,`<div class="formgrid"><div><label>Data</label><input value="${formatDate(r.date)}" readonly></div><div><label>Setor</label><input value="${esc(r.sector)}" readonly></div><div><label>Centro de custos</label><input value="${esc(formatCC(r.cc))}" readonly></div><div><label>Ordem de Manutenção</label><input id="viewMrOM" value="${esc(r.om||'')}" ${management?'':'readonly'}></div></div><div class="notice">Status: <b>${requestStatusLabel(r)}</b>${r.correctedByManagement?' — Corrigida pela Gestão':''}${r.uniqueCode?' — Código: <b>'+esc(r.uniqueCode)+'</b>':''}</div><h3>Materiais</h3><div>${rows}</div><div class="rowactions">${management&&r.status==='pending'?'<button type="button" class="secondary" id="correctMrBtn">Salvar correção</button><button type="button" class="btn" id="approveMrBtn">Aprovar</button><button type="button" class="danger" id="denyMrBtn">Negar</button>':''}<button type="button" class="secondary" onclick="printMaterialRequest(${r.id})">Imprimir</button></div>`);
+  if(management&&r.status==='pending')document.getElementById('correctMrBtn').onclick=()=>correctMaterialRequest(r.id);
+  if(management&&r.status==='pending')document.getElementById('approveMrBtn').onclick=()=>approveMaterialRequest(r.id);
+  if(management&&r.status==='pending')document.getElementById('denyMrBtn').onclick=()=>denyMaterialRequest(r.id);
+}
+function collectCorrection(r){const rows=[...document.querySelectorAll('.corr-qty')].map((el,i)=>({productCode:document.querySelector(`.corr-code[data-i="${i}"]`).value,qty:Number(el.value),reg:digits(document.querySelector(`.corr-reg[data-i="${i}"]`).value)}));return rows;}
+function correctMaterialRequest(id){const r=db.materialRequests.find(x=>x.id==id);if(!r)return;const rows=collectCorrection(r);if(rows.length>20||rows.some(x=>!x.productCode||!Number.isFinite(x.qty)||x.qty<=0)){alert('Dados dos materiais inválidos.');return;}r.products=rows;r.om=formatOM(document.getElementById('viewMrOM').value);r.correctedByManagement=true;r.correctionDate=new Date().toISOString().slice(0,10);save();openMaterialRequest(id,true);alert('Requisição corrigida pela Gestão.');}
+function approveMaterialRequest(id){const r=db.materialRequests.find(x=>x.id==id);if(!r)return;if(!r.correctedByManagement){/* approval allowed without correction */}r.status='approved';r.approvalDate=new Date().toISOString().slice(0,10);if(!r.uniqueCode)r.uniqueCode=randomRequestCode();r.used=false;save();closeModal();alert('Requisição aprovada. Código: '+r.uniqueCode);}
+function denyMaterialRequest(id){const r=db.materialRequests.find(x=>x.id==id);if(!r)return;r.status='denied';r.approvalDate=new Date().toISOString().slice(0,10);save();closeModal();alert('Requisição negada.');}
+function printMaterialRequest(id){const r=db.materialRequests.find(x=>x.id==id);if(!r)return;const w=window.open('','_blank');if(!w){alert('Permita pop-ups para imprimir.');return;}w.document.write(`<html><head><title>Requisição de Material - ${esc(r.sector)}</title><style>body{font-family:Arial;padding:30px}h1{font-size:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:7px;text-align:left}.meta{margin:12px 0;line-height:1.7}</style></head><body><h1>Requisição de Material - ${esc(r.sector)}</h1><div class="meta">Data: ${formatDate(r.date)}<br>Setor: ${esc(r.sector)}<br>Centro de custos: ${esc(formatCC(r.cc))}<br>Ordem de Manutenção: ${esc(r.om||'')}<br>Status: ${r.status==='approved' && r.used ? `Aprovada - Lançada na Saída (${formatDate(r.launchDate||r.date)}) - Saída N°:${esc(r.exitNumber||'')}` : (r.status==='approved' ? `Aprovada - ${esc(r.uniqueCode||'')}` : requestStatusLabel(r))}<br>${r.status==='approved' && !r.used ? `Código: ${esc(r.uniqueCode||'')}` : ''}</div><table><thead><tr><th>Código</th><th>Material</th><th>Quantidade</th><th>Matrícula</th></tr></thead><tbody>${(r.products||[]).map(p=>`<tr><td>${esc(p.productCode)}</td><td>${esc(productName(p.productCode))}</td><td>${padNumber(p.qty,2)}</td><td>${esc(p.reg||'')}</td></tr>`).join('')}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`);w.document.close();}
+function renderSectorMaterialPages(){
+  const main=document.querySelector('main');
+  document.querySelectorAll('.dynamic-sector-page').forEach(x=>x.remove());
+  const menu=document.getElementById('sectorMenuTabs'); if(menu)menu.innerHTML='';
+  db.sectors.forEach(s=>{
+    const id=safeSectorId(s.code);
+    if(menu)menu.insertAdjacentHTML('beforeend',`<button type="button" class="nav-btn" data-show="${id}" data-group="setores-diversos">${esc(s.name)}</button>`);
+    const sec=document.createElement('section');sec.className='page dynamic-sector-page';sec.id=id;sec.innerHTML=`<button type="button" class="secondary back-main" data-show="principal">← Tela Principal</button><div class="card"><div class="toolbar"><div><h2>Requisição de Material - ${esc(s.name)}</h2><div class="muted">Centro de custos: ${esc(formatCC(s.cc))}</div></div><button type="button" class="btn" onclick="openMaterialRequestForm('${esc(s.code)}')">Nova Requisição</button></div><div class="scroll"><table><thead><tr><th>Data</th><th>Material</th><th>Quantidade</th><th>Ordem de Manutenção</th><th>Status</th><th>Código</th><th>Ações</th></tr></thead><tbody id="sectorReqBody-${esc(s.code)}"></tbody></table></div></div>`;main.appendChild(sec);
+    const body=sec.querySelector('tbody'); const reqs=db.materialRequests.filter(r=>r.sectorCode===s.code).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    body.innerHTML=reqs.map(r=>`<tr class="${requestStatusClass(r)}"><td>${formatDate(r.date)}</td><td>${materialRowsForRequest(r)}</td><td>${(r.products||[]).map(p=>padNumber(p.qty,2)).join('<br>')}</td><td>${formatOM(r.om)}</td><td>${requestStatusLabel(r)}${r.correctedByManagement?' — Corrigida pela Gestão':''}</td><td>${esc(r.uniqueCode||'—')}</td><td><button class="secondary" onclick="openMaterialRequest(${r.id},false)">Abrir</button> ${r.uniqueCode?`<button class="secondary" onclick="printMaterialRequest(${r.id})">Imprimir</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7">Nenhuma requisição cadastrada.</td></tr>';
+  });
+  const landing=document.getElementById('sectorLandingBody'); if(landing)landing.innerHTML=db.sectors.map(s=>`<div class="card" style="margin:8px 0"><button type="button" class="home-btn" style="min-height:auto;width:100%" data-show="${safeSectorId(s.code)}">Requisição de Material - ${esc(s.name)}</button></div>`).join('')||'<div class="notice">Cadastre um setor em Estoque → Setores para criar sua aba de requisição.</div>';
+}
+function renderMaterialApprovalLists(){
+  const pending=db.materialRequests.filter(r=>r.status==='pending').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const approved=db.materialRequests.filter(r=>r.status==='approved').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const flat=(arr,bodyId,management)=>{const body=document.getElementById(bodyId);if(!body)return;body.innerHTML=arr.flatMap(r=>(r.products||[]).map((p,i)=>`<tr><td>${formatDate(r.date)}</td><td>${esc(r.sector)}</td><td>${esc(productName(p.productCode))}</td><td>${padNumber(p.qty,2)}</td><td>${formatOM(r.om)}</td><td><button class="secondary" onclick="openMaterialRequest(${r.id},${management})">Abrir</button></td></tr>`)).join('')||'<tr><td colspan="6">Nenhum material pendente.</td></tr>';};
+  flat(pending,'approvalMaterialsBody',true);
+  const body=document.getElementById('stockOrdersBody');if(body)body.innerHTML=approved.map(r=>(r.products||[]).map(p=>`<tr class="request-approved"><td>${esc(r.uniqueCode)}</td><td>${formatDate(r.date)}</td><td>${esc(r.sector)}</td><td>${esc(productName(p.productCode))}</td><td>${padNumber(p.qty,2)}</td><td>${formatOM(r.om)}</td><td>${r.used?'Lançado na saída':'Aprovado'}</td><td><button class="secondary" onclick="printMaterialRequest(${r.id})">Imprimir</button></td></tr>`)).join('')||'<tr><td colspan="8">Nenhum pedido aprovado.</td></tr>';
+  const mb=document.getElementById('managementMaterialsBody');if(mb)mb.innerHTML=approved.map(r=>(r.products||[]).map(p=>`<tr class="request-approved"><td>${esc(r.uniqueCode)}</td><td>${formatDate(r.date)}</td><td>${esc(r.sector)}</td><td>${esc(productName(p.productCode))}</td><td>${padNumber(p.qty,2)}</td><td>${formatOM(r.om)}</td><td>${r.used?'Lançado na saída':'Aprovado'}</td><td><button class="secondary" onclick="printMaterialRequest(${r.id})">Imprimir</button></td></tr>`)).join('')||'<tr><td colspan="8">Nenhum material aprovado.</td></tr>';
+}
+
+function delExit(id){
+  if(confirm('Excluir esta saída?')){db.exits=db.exits.filter(x=>x.id!==id);save();}
+}
+
+
 function openEntry(){
   if(!db.products.length){alert('Cadastre pelo menos um produto antes de registrar uma entrada.');return;}
-  openModal('Nova entrada',`
-    <div class="formgrid">
-      <div><label>Data</label><input id="eDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
-      <div><label>Nota Fiscal</label><input id="eNF"></div>
-      <div><label>Nome do fornecedor</label><input id="eSupplier"></div>
-    </div>
-    <h3>Produtos / REQs / OCs</h3>
-    <div id="entryRows"></div>
-    <button type="button" class="secondary" id="addEntryBtn">+ Produto</button>
-    <div class="rowactions"><button type="button" class="btn" id="saveEntryBtn">Salvar entrada</button></div>`);
+  openModal('Nova entrada',`<div class="formgrid">
+    <div><label>Data</label><input id="eDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    <div><label>Nota Fiscal</label><input id="eNF" inputmode="numeric" placeholder="000.000.000"></div>
+    <div><label>Fornecedor</label><input id="eSupplier"></div>
+  </div><h3>Produtos / REQs / OCs</h3><div id="entryRows"></div>
+  <button type="button" class="secondary" id="addEntryBtn">+ Produto</button>
+  <div class="rowactions"><button type="button" class="btn" id="saveEntryBtn">Salvar entrada</button></div>`);
   document.getElementById('addEntryBtn').onclick=addEntryRow;
   document.getElementById('saveEntryBtn').onclick=saveEntry;
   addEntryRow();
@@ -497,181 +605,52 @@ function addEntryRow(){
   const host=document.getElementById('entryRows'); if(!host)return;
   const d=document.createElement('div'); d.className='rowitem';
   d.innerHTML=`<div class="formgrid">
-    <div><label>REQ</label><input class="req"></div>
-    <div><label>OC</label><input class="oc"></div>
+    <div><label>REQ</label><input class="req" inputmode="numeric"></div>
+    <div><label>OC</label><input class="oc" inputmode="numeric"></div>
     <div><label>Produto</label>${productSelect('product')}</div>
     <div><label>Quantidade</label><input class="qty" type="number" min="0.001" step="0.001"></div>
     <div><label>Valor unitário da nota</label><input class="unit" type="text" inputmode="decimal" placeholder="0,00"></div>
-  </div>
-  <div class="rowactions"><button type="button" class="danger removeEntry">Remover</button></div>`;
-  d.querySelector('.removeEntry').onclick=()=>d.remove();
-  host.appendChild(d);
+  </div><div class="rowactions"><button type="button" class="danger removeEntry">Remover</button></div>`;
+  d.querySelector('.removeEntry').onclick=()=>d.remove(); host.appendChild(d);
 }
 function saveEntry(){
-  const date=document.getElementById('eDate').value;
-  const nf=formatNF(document.getElementById('eNF').value.trim());
-  const supplier=document.getElementById('eSupplier').value.trim();
-  if(!date||!nf||!supplier){alert('Informe a data, a Nota Fiscal e o nome do fornecedor.');return;}
+  const date=document.getElementById('eDate')?.value;
+  const nf=formatNF(document.getElementById('eNF')?.value||'');
+  const supplier=document.getElementById('eSupplier')?.value.trim();
+  if(!date||!nf||!supplier){alert('Informe a data, a Nota Fiscal e o fornecedor.');return;}
   const rows=[...document.querySelectorAll('#entryRows .rowitem')].map(r=>({
-    req:r.querySelector('.req').value.trim(),
-    oc:r.querySelector('.oc').value.trim(),
-    productCode:r.querySelector('.product').value,
-    qty:Number(r.querySelector('.qty').value),
-    unitValue:parseMoney(r.querySelector('.unit').value)
+    req:r.querySelector('.req').value.trim(),oc:r.querySelector('.oc').value.trim(),productCode:r.querySelector('.product').value,
+    qty:Number(r.querySelector('.qty').value),unitValue:parseMoney(r.querySelector('.unit').value)
   }));
-  if(!rows.length){alert('Adicione pelo menos um produto.');return;}
-  if(rows.some(r=>!r.productCode||!Number.isFinite(r.qty)||r.qty<=0||!Number.isFinite(r.unitValue)||r.unitValue<0)){
+  if(!rows.length||rows.some(r=>!r.productCode||!Number.isFinite(r.qty)||r.qty<=0||!Number.isFinite(r.unitValue)||r.unitValue<0)){
     alert('Preencha produto, quantidade e valor unitário corretamente.');return;
   }
   rows.forEach(r=>db.entries.push({id:Date.now()+Math.random(),createdAt:Date.now(),date,nf,supplier,...r}));
-  closeModal(); save(); alert('Entrada salva com sucesso.');
+  closeModal();save();alert('Entrada salva com sucesso.');
 }
-function delEntry(id){
-  if(confirm('Excluir esta entrada?')){db.entries=db.entries.filter(e=>e.id!==id);save();}
-}
-
-
 function openInventory(){
-  if(!db.products.length){
-    alert('Cadastre pelo menos um produto antes de fazer o inventário.');
-    return;
-  }
-
-  openModal('Inventário — ajuste de estoque', `
-    <div class="muted" style="margin-bottom:12px">
-      Informe a quantidade física encontrada. O sistema calculará automaticamente a diferença em relação ao estoque atual.
-    </div>
-    <div style="overflow:auto">
-      <table>
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Produto</th>
-            <th>Estoque atual</th>
-            <th>Quantidade física</th>
-            <th>Diferença</th>
-          </tr>
-        </thead>
-        <tbody id="inventoryRows"></tbody>
-      </table>
-    </div>
-    <div style="margin-top:12px">
-      <label>Observação geral</label>
-      <input id="inventoryObs" placeholder="Ex.: conferência física do almoxarifado">
-    </div>
-    <div class="rowactions">
-      <button type="button" class="secondary" id="cancelInventoryBtn">Cancelar</button>
-      <button type="button" class="btn" id="saveInventoryBtn">Corrigir estoque</button>
-    </div>
-  `);
-
-  const host = document.getElementById('inventoryRows');
-
-  db.products.forEach(p => {
-    const current = qty(p);
-    const row = document.createElement('tr');
-    row.className = 'inventory-row';
-    row.dataset.code = p.code;
-    row.innerHTML = `
-      <td>${esc(p.code)}</td>
-      <td>${esc(p.name)}</td>
-      <td class="inv-current">${padNumber(current,3)}</td>
-      <td>
-        <input class="inv-physical" type="number" min="0" step="0.001" value="${current}" style="width:110px">
-      </td>
-      <td class="inv-diff">0</td>
-    `;
-
-    const physical = row.querySelector('.inv-physical');
-    const diff = row.querySelector('.inv-diff');
-
-    physical.addEventListener('input', () => {
-      const value = Number(physical.value);
-      const difference = Number.isFinite(value) ? value - current : 0;
-      diff.textContent = difference > 0 ? `+${padNumber(difference,3)}` : padNumber(difference,3);
-    });
-
-    host.appendChild(row);
+  if(!db.products.length){alert('Cadastre pelo menos um produto antes de fazer o inventário.');return;}
+  const today=new Date().toISOString().slice(0,10);
+  openModal('Inventário — ajuste de estoque',`<div class="formgrid"><div><label>Data</label><input id="invDate" type="date" value="${today}"></div></div>
+  <div class="notice">Informe o ajuste de cada produto: positivo para aumentar e negativo para diminuir.</div>
+  <div class="scroll"><table><thead><tr><th>Código</th><th>Produto</th><th>Estoque atual</th><th>Ajuste</th><th>Novo estoque</th></tr></thead><tbody id="inventoryRows"></tbody></table></div>
+  <div class="rowactions"><button type="button" class="btn" id="saveInventoryBtn">Aplicar inventário</button></div>`);
+  const body=document.getElementById('inventoryRows');
+  body.innerHTML=[...db.products].sort((a,b)=>String(a.code).localeCompare(String(b.code),undefined,{numeric:true})).map(p=>`<tr>
+    <td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${padNumber(qty(p),2)}</td>
+    <td><input class="inv-adjust" data-code="${esc(p.code)}" type="number" step="0.001" value="0"></td>
+    <td class="inv-new" data-code="${esc(p.code)}">${padNumber(qty(p),2)}</td></tr>`).join('');
+  document.querySelectorAll('.inv-adjust').forEach(el=>el.oninput=()=>{
+    const p=db.products.find(x=>x.code===el.dataset.code); const out=document.querySelector(`.inv-new[data-code="${CSS.escape(el.dataset.code)}"]`);
+    if(p&&out)out.textContent=padNumber(qty(p)+Number(el.value||0),2);
   });
-
-  document.getElementById('cancelInventoryBtn').onclick = closeModal;
-  document.getElementById('saveInventoryBtn').onclick = saveInventory;
+  document.getElementById('saveInventoryBtn').onclick=()=>{
+    const date=document.getElementById('invDate').value; let count=0;
+    document.querySelectorAll('.inv-adjust').forEach(el=>{const adjustment=Number(el.value||0);if(adjustment){db.inventories.push({id:Date.now()+Math.random(),date,code:el.dataset.code,adjustment});count++;}});
+    if(!count){alert('Informe pelo menos um ajuste.');return;}
+    save();closeModal();alert('Inventário aplicado com sucesso.');
+  };
 }
-
-function saveInventory(){
-  const rows = [...document.querySelectorAll('#inventoryRows .inventory-row')];
-
-  if(!rows.length){
-    alert('Não há produtos para inventariar.');
-    return;
-  }
-
-  const date = new Date().toISOString().slice(0,10);
-  const observation = document.getElementById('inventoryObs')?.value.trim() || '';
-
-  let changed = 0;
-
-  rows.forEach(row => {
-    const code = row.dataset.code;
-    const current = Number(row.querySelector('.inv-current').textContent || 0);
-    const physical = Number(row.querySelector('.inv-physical').value);
-
-    if(!Number.isFinite(physical) || physical < 0){
-      return;
-    }
-
-    const adjustment = physical - current;
-
-    if(adjustment !== 0){
-      db.inventories.push({
-        id: Date.now() + Math.random(),
-        code,
-        date,
-        physical,
-        adjustment,
-        observation
-      });
-      changed++;
-    }
-  });
-
-  const invalid = rows.some(row => {
-    const value = Number(row.querySelector('.inv-physical').value);
-    return !Number.isFinite(value) || value < 0;
-  });
-
-  if(invalid){
-    alert('Informe uma quantidade física válida para todos os produtos.');
-    return;
-  }
-
-  closeModal();
-  save();
-
-  if(changed){
-    alert(`Inventário salvo com sucesso. ${changed} produto(s) tiveram a quantidade corrigida.`);
-  }else{
-    alert('Inventário conferido. Nenhuma quantidade precisou ser corrigida.');
-  }
-}
-
-function nextExitNumber(){
-  const used = new Set(db.exits.map(x=>String(x.number||'').trim()).filter(Boolean));
-  let max = 0;
-  db.exits.forEach(x=>{
-    const n = parseInt(String(x.number||'').trim(),10);
-    if(Number.isFinite(n) && n > max) max = n;
-  });
-  let next = max + 1;
-  while(used.has(String(next))) next++;
-  return String(next).padStart(4,'0');
-}
-
-
-function delExit(id){
-  if(confirm('Excluir esta saída?')){db.exits=db.exits.filter(x=>x.id!==id);save();}
-}
-
 
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active-page'));
@@ -685,23 +664,26 @@ function showPage(id){
     'visao-geral':'estoque','estoque':'estoque','produtos':'estoque','entradas':'estoque','saidas':'estoque','setores':'estoque',
     'pedidos-geral':'pedidos','ordens-compra':'pedidos',
     'notas':'notas','finalidades':'notas',
-    'pedidos-materiais':'setores-diversos',
-    'gestao-pedidos-aprovacao':'gestao','gestao-oc-aprovacao':'gestao','gestao-materiais-aprovacao':'gestao','gestao-lista-pedidos':'gestao','gestao-lista-oc':'gestao','gestao-lista-materiais':'gestao'
+    'pedidos-materiais':'setores-diversos','estoque-pedidos':'estoque',
+    'gestao-pedidos-aprovacao':'gestao','gestao-oc-aprovacao':'gestao','gestao-materiais-aprovacao':'gestao','gestao-lista-pedidos':'gestao','gestao-lista-oc':'gestao','gestao-lista-materiais':'gestao','gestao-materiais-aprovacao':'gestao'
   };
-  const activeGroup=groupByPage[id]||null;
+  const activeGroup=id.startsWith('pedido-setor-')?'setores-diversos':(groupByPage[id]||null);
   document.querySelectorAll('#mainNav .menu-title').forEach(t=>{
     const title=t.textContent.trim();
     const map={'Estoque':'estoque','Pedidos':'pedidos','Notas Fiscais':'notas','Setores Diversos':'setores-diversos','Gestão':'gestao'};
     t.style.display=(!activeGroup||map[title]===activeGroup)?'block':'none';
   });
   document.querySelectorAll('#mainNav .nav-btn[data-group]').forEach(b=>{b.style.display=(!activeGroup||b.dataset.group===activeGroup)?'block':'none';});
+  const sm=document.getElementById('sectorMenuTabs'); if(sm) sm.style.display=(!activeGroup||activeGroup==='setores-diversos')?'block':'none';
   const titles={
     'visao-geral':'Visão Geral','estoque':'Estoque','produtos':'Produtos','entradas':'Entradas','saidas':'Saídas','setores':'Setores','pedidos-materiais':'Pedidos de Materiais',
     'pedidos-geral':'Lista de Pedidos Geral','ordens-compra':'Ordens de Compras','notas':'Notas Fiscais Gerais','finalidades':'Finalidades',
     'gestao-pedidos-aprovacao':'Pedidos para Aprovação','gestao-oc-aprovacao':'Ordens de Compras para Aprovação','gestao-materiais-aprovacao':'Materiais para Aprovação',
     'gestao-lista-pedidos':'Lista de Pedidos','gestao-lista-oc':'Lista de Ordem de Compra','gestao-lista-materiais':'Lista de Materiais'
   };
-  const title=document.getElementById('currentTitle'); if(title) title.textContent=titles[id]||'Sistema de Gerenciamento de Estoque Interno';
+  const pageLabel=id.startsWith('pedido-setor-') ? ((()=>{const sct=db.sectors.find(s=>safeSectorId(s.code)===id);return sct?'Requisição de Material - '+sct.name:'Pedidos de Materiais';})()) : (titles[id]||'Tela Principal');
+  const title=document.getElementById('currentTitle'); if(title)title.textContent=pageLabel;
+  const systemName=db.settings?.name||'NexGiro SmartStock Sistem'; document.title=id==='principal'?systemName:(systemName+' — '+pageLabel);
   const menu=document.getElementById('mainNav'); if(menu) menu.classList.remove('open');
   const hb=document.getElementById('hamburgerBtn'); if(hb) hb.setAttribute('aria-expanded','false');
   window.scrollTo({top:0,behavior:'smooth'});
@@ -723,13 +705,17 @@ document.addEventListener('click',function(e){
   const action=e.target.closest('[data-action]')?.dataset.action;
   if(action==='inventory'){e.preventDefault();openInventory();}
   else if(action==='new-product'){e.preventDefault();openProduct();}
+  else if(action==='import-xlsx'){e.preventDefault();openXlsxImport();}
   else if(action==='new-note'){e.preventDefault();openNote();}
   else if(action==='new-entry'){e.preventDefault();openEntry();}
   else if(action==='new-exit'){e.preventDefault();openExit();}
   else if(action==='new-sector'){e.preventDefault();openSector();}
   else if(action==='new-purpose'){e.preventDefault();openPurpose();}
+  else if(action==='new-req'){e.preventDefault();openPurchaseRequest();}
+  else if(action==='new-purchase-order'){e.preventDefault();openPurchaseOrder();}
 });
 function renderAll(){
+  const __activeId=document.querySelector('.page.active-page')?.id||'principal';
   applyMasks();
 
   let search=(document.getElementById('stockSearch')?.value||'').toLowerCase();
@@ -747,12 +733,12 @@ function renderAll(){
   let ps=(document.getElementById('productSearch')?.value||'').toLowerCase();
   document.getElementById('productBody').innerHTML=db.products.filter(p=>(p.code+' '+p.name).toLowerCase().includes(ps))
     .sort((a,b)=>String(a.code).localeCompare(String(b.code),undefined,{numeric:true,sensitivity:'base'}))
-    .map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${padNumber(p.min,2)}</td><td>${formatCC(p.cc)}</td>
+    .map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${esc(p.unit||'UN')}</td><td>${padNumber(p.min,2)}</td><td>${formatCC(p.cc)}</td>
     <td><button class="secondary" onclick="openProduct('${esc(p.code)}')">Editar</button> <button class="danger" onclick="delProduct('${esc(p.code)}')">Excluir</button></td></tr>`).join('');
 
   let ns=(document.getElementById('noteSearch')?.value||'').toLowerCase();
   document.getElementById('noteBody').innerHTML=db.notes.map((n,_insertIndex)=>({...n,_insertIndex})).filter(n=>(n.supplier+' '+n.number+' '+n.purpose).toLowerCase().includes(ns))
-    .sort((a,b)=>a._insertIndex-b._insertIndex)
+    .sort((a,b)=>b._insertIndex-a._insertIndex)
     .map(n=>`<tr><td>${esc(n.supplier)}</td><td>${formatNF(n.number)}</td>
       <td>${n.reqs.map(r=>formatReq(r.req)).join('<br>')}</td>
       <td>${n.reqs.map(r=>r.oc?formatOc(r.oc):'').join('<br>')}</td>
@@ -760,7 +746,7 @@ function renderAll(){
       <td><button class="danger" onclick="delNote(${n.id})">Excluir</button></td></tr>`).join('');
 
   let es=(document.getElementById('entrySearch')?.value||'').toLowerCase();
-  let entryList=db.entries.map((e,_insertIndex)=>({...e,_insertIndex})).filter(e=>(e.nf+' '+e.supplier+' '+e.req+' '+e.oc+' '+productName(e.productCode)).toLowerCase().includes(es)).sort((a,b)=>a._insertIndex-b._insertIndex);
+  let entryList=db.entries.map((e,_insertIndex)=>({...e,_insertIndex})).filter(e=>(e.nf+' '+e.supplier+' '+e.req+' '+e.oc+' '+productName(e.productCode)).toLowerCase().includes(es)).sort((a,b)=>b._insertIndex-a._insertIndex);
   const nfOrder=[]; const nfIndex=new Map();
   entryList.forEach(e=>{const key=String(e.nf||''); if(!nfIndex.has(key)){nfIndex.set(key,nfOrder.length);nfOrder.push(key);}});
   document.getElementById('entryBody').innerHTML=entryList.map(e=>{const bgClass=(nfIndex.get(String(e.nf||''))%2===0)?'entry-group-white':'entry-group-gray'; return `<tr class="${bgClass}"><td>${formatDate(e.date)}</td><td>${formatNF(e.nf)}</td><td>${esc(e.supplier||'')}</td>
@@ -770,28 +756,26 @@ function renderAll(){
 
   let xs=(document.getElementById('exitSearch')?.value||'').toLowerCase();
   let exits=db.exits.filter(x=>(x.number+' '+x.sector+' '+x.cc).toLowerCase().includes(xs))
-    .sort((a,b)=>{const an=parseInt(String(a.number||''),10),bn=parseInt(String(b.number||''),10);if(Number.isFinite(an)&&Number.isFinite(bn)&&an!==bn)return an-bn;return String(a.number||'').localeCompare(String(b.number||''),undefined,{numeric:true,sensitivity:'base'});});
+    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   document.getElementById('exitBody').innerHTML=exits.map((x,exitIndex)=>{
-    const bgClass = exitIndex % 2 === 0 ? 'exit-group-white' : 'exit-group-gray';
-    if(!x.products?.length) return `<tr class="${bgClass}"><td>${esc(x.number)}</td><td>${formatDate(x.date)}</td><td>${esc(x.sector)}</td><td>${formatCC(x.cc)}</td><td>—</td><td>—</td><td>—</td><td>${formatOM(x.om)}</td><td>—</td><td><button class="danger" onclick="delExit(${x.id})">Excluir</button></td></tr>`;
-    return x.products.map(pr=>`<tr class="${bgClass}">
-      <td>${esc(x.number)}</td><td>${formatDate(x.date)}</td><td>${esc(x.sector)}</td><td>${formatCC(x.cc)}</td>
-      <td>${esc(pr.productCode)}</td><td>${esc(productName(pr.productCode))}</td><td>${padNumber(pr.qty,2)}</td>
-      <td>${formatOM(x.om)}</td><td>${digits(pr.reg||'')}</td>
-      <td><button class="danger" onclick="delExit(${x.id})">Excluir</button></td>
-    </tr>`).join('');
+    const bgClass=exitIndex%2===0?'exit-group-white':'exit-group-gray';
+    if(!x.products?.length)return `<tr class="${bgClass}"><td>${exitNumberDisplay(x.number)}</td><td>${formatDate(x.date)}</td><td>${esc(x.sector)}</td><td>${formatCC(x.cc)}</td><td>—</td><td>—</td><td>—</td><td>${formatOM(x.om)}</td><td>—</td><td><button class="danger" onclick="delExit(${x.id})">Excluir</button></td></tr>`;
+    return x.products.map(pr=>`<tr class="${bgClass}"><td>${exitNumberDisplay(x.number)}</td><td>${formatDate(x.date)}</td><td>${esc(x.sector)}</td><td>${formatCC(x.cc)}</td><td>${esc(pr.productCode)}</td><td>${esc(productName(pr.productCode))}</td><td>${padNumber(pr.qty,2)}</td><td>${formatOM(x.om)}</td><td>${digits(pr.reg||'')}</td><td><button class="danger" onclick="delExit(${x.id})">Excluir</button></td></tr>`).join('');
   }).join('');
+
+  renderSectorMaterialPages();
+  renderMaterialApprovalLists();
 
   let ss=(document.getElementById('sectorSearch')?.value||'').toLowerCase();
   document.getElementById('sectorBody').innerHTML=[...db.sectors].filter(s=>(s.name+' '+s.cc).toLowerCase().includes(ss))
-    .sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'))
+    .sort((a,b)=>b.name.localeCompare(a.name,'pt-BR'))
     .map(s=>`<tr><td>${esc(s.name)}</td><td>${formatCC(s.cc)}</td>
       <td><button class="secondary" onclick="openSector('${esc(s.code)}')">Editar</button> <button class="danger" onclick="delSector('${esc(s.code)}')">Excluir</button></td></tr>`)
     .join('')||'<tr><td colspan="3">Nenhum setor cadastrado.</td></tr>';
 
   let pss=(document.getElementById('purposeSearch')?.value||'').toLowerCase();
   document.getElementById('purposeBody').innerHTML=[...db.purposes].filter(p=>p.name.toLowerCase().includes(pss))
-    .sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'))
+    .sort((a,b)=>b.name.localeCompare(a.name,'pt-BR'))
     .map(p=>`<tr><td>${esc(p.name)}</td><td><button class="secondary" onclick="openPurpose('${esc(p.name)}')">Editar</button>
       <button class="danger" onclick="delPurpose('${esc(p.name)}')">Excluir</button></td></tr>`).join('')
     ||'<tr><td colspan="2">Nenhuma finalidade cadastrada.</td></tr>';
@@ -805,12 +789,393 @@ function renderAll(){
   document.getElementById('lowBody').innerHTML=low.map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${padNumber(qty(p),2)}</td><td>${padNumber(p.min,2)}</td></tr>`).join('')
     ||'<tr><td colspan="4">Nenhum produto com estoque baixo.</td></tr>';
 
-  if(!document.querySelector('.page.active-page')) showPage('principal');
+  if(document.getElementById(__activeId)) showPage(__activeId); else showPage('principal');
+  installListFilters();
 }
-window.addEventListener('load',()=>{showPage('principal');document.body.classList.add('home-page');
+
+function installListFilters(){
+  document.querySelectorAll('main .scroll > table').forEach(table=>{
+    const scroll=table.parentElement;
+    if(!scroll || scroll.closest('.modalbox')) return;
+    if(scroll.previousElementSibling?.classList.contains('list-filterbar')) return;
+    const bar=document.createElement('div'); bar.className='list-filterbar';
+    const label=document.createElement('span'); label.className='filter-label'; label.textContent='Filtro:';
+    const input=document.createElement('input'); input.type='search'; input.placeholder='Digite para filtrar esta lista...'; input.setAttribute('aria-label','Filtrar lista');
+    const clear=document.createElement('button'); clear.type='button'; clear.className='secondary clear-filter'; clear.textContent='Limpar';
+    input.addEventListener('input',()=>filterTableRows(table,input.value));
+    clear.addEventListener('click',()=>{input.value='';filterTableRows(table,'');input.focus();});
+    bar.append(label,input,clear); scroll.parentElement.insertBefore(bar,scroll);
+  });
+}
+function filterTableRows(table,value){
+  const q=String(value||'').trim().toLowerCase();
+  table.querySelectorAll('tbody tr').forEach(tr=>{
+    const txt=(tr.innerText||tr.textContent||'').toLowerCase();
+    tr.style.display=(!q||txt.includes(q))?'':'none';
+  });
+}
+
+/* ================= SISTEMA / CONFIGURAÇÕES ================= */
+db.settings=db.settings||{name:'NexGiro SmartStock Sistem',accent:'#173b2d',border:'#d9dee7',borderWidth:'1px'};
+function applySystemSettings(){
+  const st=db.settings||{};
+  document.title=st.name||'NexGiro SmartStock Sistem';
+  const root=document.documentElement;
+  root.style.setProperty('--system-accent',st.accent||'#173b2d');
+  root.style.setProperty('--system-border',st.border||'#d9dee7');
+  root.style.setProperty('--system-border-width',st.borderWidth||'1px');
+  document.body.classList.add('system-themed');
+  const brand=document.getElementById('systemBrand'); if(brand)brand.textContent=st.name||'NexGiro SmartStock Sistem';
+  const homeName=document.getElementById('homeSystemName'); if(homeName)homeName.textContent=st.name||'NexGiro SmartStock Sistem';
+  document.querySelectorAll('.print-sheet .system-name').forEach(x=>x.textContent=st.name||'NexGiro SmartStock Sistem');
+}
+function openSystemSettings(){
+  const st=db.settings||{};
+  openModal('Configurações do Sistema',`<div class="formgrid">
+    <div style="grid-column:1/-1"><label>Nome do sistema</label><input id="sysName" value="${esc(st.name||'NexGiro SmartStock Sistem')}"></div>
+    <div><label>Cor principal</label><input id="sysAccent" type="color" value="${esc(st.accent||'#173b2d')}" style="height:44px;padding:4px"></div>
+    <div><label>Cor das bordas</label><input id="sysBorder" type="color" value="${esc(st.border||'#d9dee7')}" style="height:44px;padding:4px"></div>
+    <div><label>Espessura das bordas</label><select id="sysBorderWidth"><option value="1px" ${(st.borderWidth||'1px')==='1px'?'selected':''}>Fina</option><option value="2px" ${st.borderWidth==='2px'?'selected':''}>Média</option><option value="3px" ${st.borderWidth==='3px'?'selected':''}>Grossa</option></select></div>
+  </div><div class="notice">As configurações ficam salvas neste navegador e serão aplicadas ao sistema e às telas de impressão.</div>
+  <div class="rowactions"><button type="button" class="btn" id="saveSystemSettings">Salvar configurações</button><button type="button" class="secondary" id="resetSystemSettings">Restaurar padrão</button><button type="button" class="danger" id="resetAllData">Resetar sistema</button><button type="button" class="secondary" onclick="closeModal()">Cancelar</button></div>`);
+  document.getElementById('saveSystemSettings').onclick=()=>{db.settings={name:document.getElementById('sysName').value.trim()||'NexGiro SmartStock Sistem',accent:document.getElementById('sysAccent').value,border:document.getElementById('sysBorder').value,borderWidth:document.getElementById('sysBorderWidth').value};localStorage.setItem(KEY,JSON.stringify(db));applySystemSettings();closeModal();renderAll();};
+  document.getElementById('resetSystemSettings').onclick=()=>{db.settings={name:'NexGiro SmartStock Sistem',accent:'#173b2d',border:'#d9dee7',borderWidth:'1px'};localStorage.setItem(KEY,JSON.stringify(db));applySystemSettings();closeModal();renderAll();};
+  document.getElementById('resetAllData').onclick=()=>{if(!confirm('Isso apagará todos os dados deste sistema neste navegador. Deseja continuar?'))return;localStorage.removeItem(KEY);location.reload();};
+}
+function repairRequestLaunchLinks(){
+  (db.materialRequests||[]).forEach(r=>{
+    if(!r.used)return;
+    const ex=(db.exits||[]).find(x=>String(x.requestCode||'')===String(r.uniqueCode||''));
+    if(ex){r.launchDate=r.launchDate||ex.date;r.exitNumber=r.exitNumber||exitNumberDisplay(ex.number);r.exitLaunchedAt=r.exitLaunchedAt||ex.createdAt||new Date().toISOString();}
+  });
+}
+applySystemSettings();
+repairRequestLaunchLinks();
+localStorage.setItem(KEY,JSON.stringify(db));
+
+window.addEventListener('load',()=>{applySystemSettings();showPage('principal');document.body.classList.add('home-page');
 showPage('principal');
 renderAll();});
 document.addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+function openExit(){
+  if(!db.products.length){alert('Cadastre pelo menos um produto antes de registrar uma saída.');return;}
+  if(!db.sectors.length){alert('Cadastre pelo menos um setor antes de registrar uma saída.');return;}
+  openModal('Nova saída',`<div class="formgrid">
+    <div><label>Código do pedido aprovado</label><input id="xRequestCode" placeholder="Ex.: A1b2C3d"></div>
+    <div><label>Número da saída</label><input id="xNum" value="${nextExitNumber()}" readonly></div>
+    <div><label>Data</label><input id="xDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    <div><label>Setor solicitante</label><input id="xSectorView" readonly></div>
+    <div><label>Centro de custos</label><input id="xCC" readonly></div>
+    <div><label>Ordem de manutenção</label><input id="xOM" readonly></div>
+  </div><div class="notice">Informe um código de pedido aprovado. Os materiais, quantidades e matrícula serão preenchidos automaticamente. A quantidade poderá apenas ser reduzida.</div><div id="exitRows"></div><div class="rowactions"><button type="button" class="btn" id="saveExitBtn">Salvar saída</button></div>`);
+  document.getElementById('xRequestCode').onchange=loadExitRequest;
+  document.getElementById('xRequestCode').oninput=()=>{if(document.getElementById('xRequestCode').value.length>=7)loadExitRequest()};
+  document.getElementById('saveExitBtn').onclick=saveExit;
+}
+function loadExitRequest(){
+  const code=document.getElementById('xRequestCode').value.trim();const r=db.materialRequests.find(x=>x.uniqueCode===code);
+  if(!r||r.status!=='approved'||r.used){alert('Código inválido, não aprovado ou já utilizado.');return;}
+  document.getElementById('xSectorView').value=r.sector;document.getElementById('xCC').value=formatCC(r.cc);document.getElementById('xOM').value=formatOM(r.om);
+  const host=document.getElementById('exitRows');host.innerHTML='';
+  (r.products||[]).forEach(p=>{const d=document.createElement('div');d.className='rowitem exit-product-row';d.innerHTML=`<div class="exit-product-grid"><div><label>Código</label><input value="${esc(p.productCode)}" readonly></div><div><label>Produto</label><input value="${esc(productName(p.productCode))}" readonly></div><div><label>Quantidade</label><input class="approved-qty" data-max="${p.qty}" value="${p.qty}" type="number" min="0.001" max="${p.qty}" step="0.001"></div><div><label>Matrícula</label><input class="exit-reg" inputmode="numeric" value="${esc(digits(p.reg||''))}"></div></div>`;host.appendChild(d);});
+}
+function saveExit(){
+  const code=document.getElementById('xRequestCode').value.trim();const req=db.materialRequests.find(r=>r.uniqueCode===code);
+  if(!req||req.status!=='approved'||req.used){alert('Informe um código de pedido aprovado e ainda não utilizado.');return;}
+  const number=digits(document.getElementById('xNum').value).slice(0,4).padStart(4,'0')+'/'+year2();const date=document.getElementById('xDate').value;if(!date){alert('Informe a data.');return;}
+  if(db.exits.some(x=>exitNumberDisplay(x.number)===number||String(x.number)===number)){alert('Número de saída já utilizado.');return;}
+  const rows=[...document.querySelectorAll('#exitRows .rowitem')].map((r,i)=>({productCode:req.products[i].productCode,qty:Number(r.querySelector('.approved-qty').value),reg:digits(r.querySelector('.exit-reg')?.value||'')}));
+  if(rows.some(r=>!r.reg)){alert('Informe a matrícula de cada material. A matrícula pode ser qualquer número.');return;}
+  if(rows.some((r,i)=>!Number.isFinite(r.qty)||r.qty<=0||r.qty>Number(req.products[i].qty))){alert('A quantidade não pode ser maior que a quantidade aprovada no pedido.');return;}
+  for(const r of rows){const p=db.products.find(x=>x.code===r.productCode);if(!p||qty(p)<r.qty){alert(`Estoque insuficiente para ${p?p.name:r.productCode}. Disponível: ${p?qty(p):0}`);return;}}
+  db.exits.push({id:Date.now()+Math.random(),createdAt:Date.now(),number,date,sector:req.sector,sectorCode:req.sectorCode,cc:req.cc,om:req.om,requestCode:req.uniqueCode,products:rows});
+  req.used=true;
+  req.launchDate=date;
+  req.exitNumber=exitNumberDisplay(number);
+  req.exitLaunchedAt=new Date().toISOString();
+  req.usedExitId=db.exits[db.exits.length-1]?.id||null;
+  save();closeModal();alert('Saída lançada com sucesso. O código do pedido não poderá mais ser utilizado.');
+}
+
+
+/* ===================== REQs / OCs ===================== */
+const UNIT_OPTIONS=['UN','Kg','g','MT','CM','CX','LT','TON','PCT','FRD','ML','M','MM','DZ','PAR','KIT','RL','SC','TB','AMP','GL','PC','JG'];
+function unitSelect(id, selected='UN'){return `<select id="${id}">${UNIT_OPTIONS.map(u=>`<option value="${u}" ${u===selected?'selected':''}>${u}</option>`).join('')}</select>`}
+function productUnit(code){return db.products.find(p=>p.code===code)?.unit||'UN'}
+function qtyUnit(q,unit='UN'){return `${padNumber(q,2)} ${esc(unit)}`}
+function nextPurchaseRequestNumber(){let max=0;db.purchaseRequests.forEach(r=>{const n=parseInt(digits(r.number).slice(0,5),10);if(Number.isFinite(n)&&n>max)max=n;});return String(max+1).padStart(5,'0')+'/'+year2()}
+function nextPurchaseOrderNumber(){let max=0;db.purchaseOrders.forEach(r=>{const n=parseInt(digits(r.number).slice(0,6),10);if(Number.isFinite(n)&&n>max)max=n;});return String(max+1).padStart(6,'0')+'/'+year2()}
+function reqStatus(r){return r.status==='approved'?'Aprovada':r.status==='denied'?'Negada':'Pendente'}
+function reqClass(r){return r.status==='approved'?'request-approved':r.status==='denied'?'request-denied':'request-pending'}
+function requestMaterialsHtml(r){return (r.products||[]).map(p=>`${esc(p.code)} - ${esc(productName(p.code))} — ${qtyUnit(p.qty,productUnit(p.code))}${p.company?' — '+esc(p.company):''}`).join('<br>')}
+function openPurchaseRequest(){
+  if(!db.products.length){alert('Cadastre pelo menos um produto antes de criar uma REQ.');return;}
+  const sectorOptions=`<option value="">DIVERSOS</option>${db.sectors.map(s=>`<option value="${esc(s.code)}">${esc(s.name)}</option>`).join('')}`;
+  openModal('Nova REQ',`<div class="formgrid"><div><label>Nº do Pedido</label><input id="rNumber" value="${nextPurchaseRequestNumber()}" readonly></div><div><label>Data</label><input id="rDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Setor</label><select id="rSector"><option value="">DIVERSOS</option>${db.sectors.map(s=>`<option value="${esc(s.code)}">${esc(s.name)}</option>`).join('')}</select></div><div><label>Centro de Custo</label><input id="rCC" value="00.00-000" readonly></div></div><h3>Materiais (máximo 20)</h3><div id="reqProductRows"></div><button type="button" class="secondary" id="addReqProductBtn">+ Material</button><div class="rowactions"><button type="button" class="btn" id="savePurchaseRequestBtn">Criar REQ</button></div>`);
+  document.getElementById('rSector').onchange=()=>{const s=db.sectors.find(x=>x.code===document.getElementById('rSector').value);document.getElementById('rCC').value=formatCC(s?.cc||'00.00-000')};
+  document.getElementById('addReqProductBtn').onclick=addPurchaseRequestRow; document.getElementById('savePurchaseRequestBtn').onclick=savePurchaseRequest; addPurchaseRequestRow();
+}
+function addPurchaseRequestRow(){const host=document.getElementById('reqProductRows');if(!host)return;if(host.children.length>=20){alert('Cada REQ pode ter no máximo 20 materiais.');return;}const i=host.children.length;const d=document.createElement('div');d.className='rowitem';d.innerHTML=`<div class="formgrid"><div><label>Código</label><select class="req-code" data-i="${i}"><option value="">Selecione...</option>${db.products.map(p=>`<option value="${esc(p.code)}">${esc(p.code)} - ${esc(p.name)}</option>`).join('')}</select></div><div><label>Nome</label><input class="req-name" data-i="${i}" readonly></div><div><label>Quantidade</label><input class="req-qty" data-i="${i}" inputmode="decimal" min="0.001"></div><div><label>Unidade</label><input class="req-unit" data-i="${i}" readonly></div></div>`;host.appendChild(d);d.querySelector('.req-code').onchange=()=>{const p=db.products.find(x=>x.code===d.querySelector('.req-code').value);d.querySelector('.req-name').value=p?.name||'';d.querySelector('.req-unit').value=p?.unit||'UN'};}
+function savePurchaseRequest(){const rows=[...document.querySelectorAll('#reqProductRows .rowitem')].map(d=>{const code=d.querySelector('.req-code').value;return {code,qty:Number(d.querySelector('.req-qty').value),unit:productUnit(code)}});if(!rows.length||rows.some(r=>!r.code||!Number.isFinite(r.qty)||r.qty<=0)){alert('Informe código e quantidade de todos os materiais.');return;}if(new Set(rows.map(r=>r.code)).size!==rows.length){alert('Não repita o mesmo material na REQ.');return;}const sc=document.getElementById('rSector').value;const sector=db.sectors.find(s=>s.code===sc);db.purchaseRequests.push({id:Date.now()+Math.random(),createdAt:Date.now(),number:document.getElementById('rNumber').value,date:document.getElementById('rDate').value,sectorCode:sc,sector:sector?.name||'DIVERSOS',cc:formatCC(sector?.cc||'00.00-000'),products:rows,status:'pending'});save();closeModal();alert('REQ criada e enviada para Gestão.');}
+function openPurchaseRequestReview(id){const r=db.purchaseRequests.find(x=>x.id==id);if(!r)return;const editable=r.status==='pending';openModal('REQ '+r.number,`<div class="formgrid"><div><label>Nº do Pedido</label><input value="${esc(r.number)}" readonly></div><div><label>Data</label><input value="${formatDate(r.date)}" readonly></div><div><label>Setor</label><input value="${esc(r.sector)}" readonly></div><div><label>Centro de Custo</label><input value="${esc(formatCC(r.cc))}" readonly></div></div><h3>Materiais</h3><div id="reviewReqRows">${(r.products||[]).map((p,i)=>`<div class="rowitem"><div class="formgrid"><div><label>Código</label><input class="rev-code" data-i="${i}" value="${esc(p.code)}" ${editable?'':'readonly'}></div><div><label>Material</label><input value="${esc(productName(p.code))}" readonly></div><div><label>Quantidade</label><input class="rev-qty" data-i="${i}" value="${p.qty}" ${editable?'':'readonly'}></div><div><label>Empresa para compra</label><input class="rev-company" data-i="${i}" value="${esc(p.company||'')}" ${editable?'':'readonly'} placeholder="Obrigatório para aprovar"></div></div></div>`).join('')}</div><div class="rowactions">${editable?'<button type="button" class="secondary" id="saveReqCorrectionBtn">Salvar edição</button><button type="button" class="btn" id="approveReqBtn">Aprovar</button><button type="button" class="danger" id="denyReqBtn">Negar</button>':''}<button type="button" class="secondary" id="printReqBtn">Imprimir</button></div>`);document.getElementById('printReqBtn').onclick=()=>printPurchaseRequest(id);if(editable){document.getElementById('saveReqCorrectionBtn').onclick=()=>saveReqReview(id,false);document.getElementById('approveReqBtn').onclick=()=>saveReqReview(id,true);document.getElementById('denyReqBtn').onclick=()=>{r.status='denied';save();closeModal();};}}
+function saveReqReview(id,approve){const r=db.purchaseRequests.find(x=>x.id==id);const rows=[...document.querySelectorAll('#reviewReqRows .rowitem')].map(d=>({code:d.querySelector('.rev-code').value.trim(),qty:Number(d.querySelector('.rev-qty').value),company:d.querySelector('.rev-company').value.trim()}));if(rows.some(x=>!x.code||!Number.isFinite(x.qty)||x.qty<=0)){alert('Materiais inválidos.');return;}if(approve&&rows.some(x=>!x.company)){alert('Informe a empresa de cada material antes de aprovar a REQ.');return;}r.products=rows;r.status=approve?'approved':'pending';r.approvedAt=approve?new Date().toISOString().slice(0,10):r.approvedAt;save();closeModal();alert(approve?'REQ aprovada.':'Alterações salvas.');}
+function printPurchaseRequest(id){const r=db.purchaseRequests.find(x=>x.id==id);if(!r)return;const w=window.open('','_blank');if(!w){alert('Permita pop-ups para imprimir.');return;}w.document.write(`<html><head><title>REQ ${esc(r.number)}</title><style>body{font-family:Arial;padding:30px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:7px}</style></head><body><h1>Requisição de Compra - ${esc(r.number)}</h1><p>Data: ${formatDate(r.date)}<br>Setor: ${esc(r.sector)}<br>Centro de Custo: ${esc(r.cc)}</p><table><thead><tr><th>Código</th><th>Material</th><th>Quantidade</th><th>Unidade</th><th>Empresa</th></tr></thead><tbody>${(r.products||[]).map(p=>`<tr><td>${esc(p.code)}</td><td>${esc(productName(p.code))}</td><td>${padNumber(p.qty,2)}</td><td>${esc(productUnit(p.code))}</td><td>${esc(p.company||'')}</td></tr>`).join('')}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`);w.document.close();}
+function remainingReqProducts(r){return (r.products||[]).filter((p,i)=>{const used=(db.purchaseOrders||[]).some(oc=>(oc.items||[]).some(x=>x.reqId===r.id&&x.reqIndex===i));return !used;}).map((p,i)=>({...p,reqIndex:(r.products||[]).indexOf(p)}));}
+function openPurchaseOrder(){const available=db.purchaseRequests.filter(r=>r.status==='approved').flatMap(r=>remainingReqProducts(r).map(p=>({r,p})));if(!available.length){alert('Não há materiais de REQs aprovadas disponíveis para uma OC.');return;}const companies=[...new Set(available.map(x=>x.p.company).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));openModal('Nova Ordem de Compra',`<div class="formgrid"><div><label>Nº da OC</label><input id="ocNumber" value="${nextPurchaseOrderNumber()}" readonly></div><div><label>Data</label><input id="ocDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Empresa</label><select id="ocCompany"><option value="">Selecione...</option>${companies.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select></div></div><h3>Materiais disponíveis</h3><div id="ocItems"></div><div class="rowactions"><button type="button" class="btn" id="saveOcBtn">Criar OC</button></div>`);document.getElementById('ocCompany').onchange=()=>renderOcItems();document.getElementById('saveOcBtn').onclick=savePurchaseOrder;}
+function renderOcItems(){const host=document.getElementById('ocItems');const company=document.getElementById('ocCompany').value;if(!host)return;const arr=db.purchaseRequests.filter(r=>r.status==='approved').flatMap(r=>remainingReqProducts(r).filter(p=>p.company===company).map(p=>({r,p})));host.innerHTML=arr.map((x,i)=>`<div class="rowitem"><label><input type="checkbox" class="oc-check" data-i="${i}"> REQ ${esc(x.r.number)} — ${esc(x.p.code)} - ${esc(productName(x.p.code))} — ${qtyUnit(x.p.qty,productUnit(x.p.code))}</label><input class="oc-qty" data-i="${i}" value="${x.p.qty}" type="number" min="0.001" max="${x.p.qty}" step="0.001" readonly></div>`).join('')||'<div class="notice">Nenhum material dessa empresa disponível.</div>';host._items=arr;}
+function savePurchaseOrder(){const company=document.getElementById('ocCompany').value;if(!company){alert('Escolha a empresa.');return;}const host=document.getElementById('ocItems');const arr=host._items||[];const selected=[...document.querySelectorAll('.oc-check')].map((c,i)=>c.checked?{...arr[i],qty:Number(document.querySelector(`.oc-qty[data-i="${i}"]`).value)}:null).filter(Boolean);if(!selected.length){alert('Selecione pelo menos um material.');return;}if(selected.some(x=>!Number.isFinite(x.qty)||x.qty<=0||x.qty>x.p.qty)){alert('Quantidade inválida na OC.');return;}db.purchaseOrders.push({id:Date.now()+Math.random(),createdAt:Date.now(),number:document.getElementById('ocNumber').value,date:document.getElementById('ocDate').value,company,items:selected.map(x=>({reqId:x.r.id,reqIndex:x.p.reqIndex,reqNumber:x.r.number,code:x.p.code,qty:x.qty,unit:productUnit(x.p.code),company}))});save();closeModal();alert('OC criada com sucesso.');}
+function renderPurchaseLists(){
+ const reqs=[...db.purchaseRequests].sort((a,b)=>parseInt(digits(b.number))-parseInt(digits(a.number)));
+ const rows=reqs.map(r=>`<tr class="${reqClass(r)}"><td>${esc(r.number)}</td><td>${formatDate(r.date)}</td><td>${esc(r.sector)}</td><td>${esc(formatCC(r.cc))}</td><td>${requestMaterialsHtml(r)}</td><td>${reqStatus(r)}</td><td><button class="secondary" onclick="openPurchaseRequestReview(${r.id})">Abrir</button> <button class="secondary" onclick="printPurchaseRequest(${r.id})">Imprimir</button></td></tr>`).join('')||'<tr><td colspan="7">Nenhuma REQ cadastrada.</td></tr>';
+ ['reqBody','reqManagementListBody'].forEach(id=>{const b=document.getElementById(id);if(b)b.innerHTML=rows;});
+ const pending=reqs.filter(r=>r.status==='pending');const ab=document.getElementById('reqApprovalBody');if(ab)ab.innerHTML=pending.map(r=>`<tr class="request-pending"><td>${esc(r.number)}</td><td>${formatDate(r.date)}</td><td>${esc(r.sector)}</td><td>${esc(r.cc)}</td><td>${requestMaterialsHtml(r)}</td><td>Pendente</td><td><button class="secondary" onclick="openPurchaseRequestReview(${r.id})">Abrir</button></td></tr>`).join('')||'<tr><td colspan="7">Nenhuma REQ pendente.</td></tr>';
+ const ob=document.getElementById('purchaseOrdersBody');if(ob)ob.innerHTML=[...db.purchaseOrders].sort((a,b)=>parseInt(digits(b.number))-parseInt(digits(a.number))).map(o=>`<tr><td>${esc(o.number)}</td><td>${formatDate(o.date)}</td><td>${esc(o.company)}</td><td>${[...new Set((o.items||[]).map(x=>x.reqNumber))].join('<br>')}</td><td>${(o.items||[]).map(x=>`${esc(x.code)} - ${esc(productName(x.code))} — ${qtyUnit(x.qty,x.unit)}`).join('<br>')}</td><td><button class="secondary" onclick="printPurchaseOrder(${o.id})">Imprimir</button></td></tr>`).join('')||'<tr><td colspan="6">Nenhuma OC cadastrada.</td></tr>';
+}
+function printPurchaseOrder(id){const o=db.purchaseOrders.find(x=>x.id==id);if(!o)return;const w=window.open('','_blank');if(!w){alert('Permita pop-ups para imprimir.');return;}w.document.write(`<html><head><title>OC ${esc(o.number)}</title><style>body{font-family:Arial;padding:30px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:7px}</style></head><body><h1>Ordem de Compra ${esc(o.number)}</h1><p>Data: ${formatDate(o.date)}<br>Empresa: ${esc(o.company)}</p><table><thead><tr><th>REQ</th><th>Código</th><th>Material</th><th>Quantidade</th><th>Unidade</th></tr></thead><tbody>${(o.items||[]).map(x=>`<tr><td>${esc(x.reqNumber)}</td><td>${esc(x.code)}</td><td>${esc(productName(x.code))}</td><td>${padNumber(x.qty,2)}</td><td>${esc(x.unit)}</td></tr>`).join('')}</tbody></table><script>window.onload=()=>window.print();<\/script></body></html>`);w.document.close();}
+
+// Product unit: replace the product form/save behavior while preserving existing fields.
+const __oldOpenProduct=openProduct; const __oldSaveProduct=saveProduct;
+openProduct=function(code=''){let p=db.products.find(x=>x.code===code)||{};openModal(code?'Editar produto':'Novo produto',fieldsProductWithUnit(p)+`<div class="rowactions"><button type="button" class="btn" id="saveProductBtn2">Salvar</button></div>`);document.getElementById('saveProductBtn2').onclick=()=>saveProductWithUnit(code)};
+function fieldsProductWithUnit(p={}){return `<div class="formgrid"><div><label>Código interno</label><input id="pCode" value="${esc(p.code)}"></div><div><label>Nome do produto</label><input id="pName" value="${esc(p.name)}"></div><div><label>Unidade padrão</label>${unitSelect('pUnit',p.unit||'UN')}</div><div><label>Estoque mínimo</label><input id="pMin" inputmode="numeric" value="${padNumber(p.min??0,3)}"></div><div><label>Centro de custo</label><input id="pCC" inputmode="numeric" value="${esc(formatCC(p.cc)||'00.00-000')}"></div></div>`}
+function saveProductWithUnit(old){const code=document.getElementById('pCode').value.trim(),name=document.getElementById('pName').value.trim();if(!code||!name){alert('Informe código e nome.');return;}if(db.products.some(p=>p.code===code&&code!==old)){alert('Esse código já existe.');return;}if(db.products.some(p=>p.name.trim().toLowerCase()===name.toLowerCase()&&p.code!==old)){alert('Esse produto já está cadastrado.');return;}const p={code,name,unit:document.getElementById('pUnit').value,min:Number(document.getElementById('pMin').value||0),cc:formatCC(document.getElementById('pCC').value.trim())||'00.00-000'};if(old){const i=db.products.findIndex(x=>x.code===old);if(i>=0)db.products[i]=p;}else db.products.push(p);closeModal();save();}
+
+// Extend the existing renderer with units and new REQ/OC screens.
+const __oldRenderAll=renderAll;
+renderAll=function(){__oldRenderAll();document.querySelectorAll('#stockBody tr').forEach(tr=>{const code=tr.children[0]?.textContent.trim();if(tr.children[2])tr.children[2].textContent=qtyUnit(tr.children[2].textContent,productUnit(code));});document.querySelectorAll('#entryBody tr').forEach(tr=>{const code=tr.children[5]?.textContent.trim();if(tr.children[6])tr.children[6].textContent=qtyUnit(tr.children[6].textContent,productUnit(code));});document.querySelectorAll('#exitBody tr').forEach(tr=>{const code=tr.children[4]?.textContent.trim();if(tr.children[6])tr.children[6].textContent=qtyUnit(tr.children[6].textContent,productUnit(code));});renderPurchaseLists();};
+
+// Make unit visible in existing material-request lists.
+const __oldRenderSectorMaterialPages=renderSectorMaterialPages;
+renderSectorMaterialPages=function(){__oldRenderSectorMaterialPages();document.querySelectorAll('.dynamic-sector-page tbody tr').forEach(tr=>{const cells=tr.children;if(!cells[2])return;const values=cells[1]?.innerHTML||'';const r=Array.from(db.materialRequests).find(x=>x.products?.some(p=>values.includes(esc(productName(p.productCode)))));if(r)cells[2].innerHTML=(r.products||[]).map(p=>qtyUnit(p.qty,productUnit(p.productCode))).join('<br>');});};
+
+
+
+/* ================= PATCH REQ / ORCAMENTO / OC / ENTRADAS ================= */
+db.purchaseRequests=(db.purchaseRequests||[]).map(r=>{r.type=r.type||'normal';r.companies=r.companies||[];r.budgetConcluded=!!r.budgetConcluded;return r;});
+db.purchaseOrders=(db.purchaseOrders||[]).map(o=>{o.type=o.type||'normal';o.status=o.status||'open';o.cc=o.cc||'00.00-000';o.items=(o.items||[]).map(i=>({...i,unitValue:Number(i.unitValue||0),totalValue:Number(i.totalValue||((Number(i.qty)||0)*Number(i.unitValue||0)))}));return o;});
+
+function purchaseOrderDeliveredQty(o,item){
+  return (db.entries||[]).filter(e=>String(e.oc)===String(o.number) && String(e.productCode)===String(item.code) && String(e.req)===String(item.reqNumber)).reduce((s,e)=>s+Number(e.qty||0),0);
+}
+function purchaseOrderStatus(o){
+  if(o.type==='diversa') return o.status||'open';
+  const items=o.items||[]; if(!items.length)return 'open';
+  let delivered=0,total=0; items.forEach(i=>{total+=Number(i.qty||0);delivered+=Math.min(Number(i.qty||0),purchaseOrderDeliveredQty(o,i));});
+  if(delivered<=0)return 'open'; if(delivered+1e-9>=total)return 'delivered'; return 'partial';
+}
+function purchaseOrderStatusLabel(o){const s=purchaseOrderStatus(o);return s==='delivered'?'Entregue':s==='partial'?'Parcialmente entregue':'Em Aberto'}
+function purchaseOrderRowClass(o){const s=purchaseOrderStatus(o);return s==='delivered'?'purchase-status-delivered':s==='partial'?'purchase-status-partial':'purchase-status-open'}
+function activePurchaseOrders(){return (db.purchaseOrders||[]).filter(o=>purchaseOrderStatus(o)!=='delivered');}
+function approvedReqCompanies(r){return [...new Set((r.companies||[]).filter(Boolean))];}
+function reqAllocated(r){return (r.products||[]).every(p=>!!p.company);
+}
+function remainingReqProducts2(r){
+  return (r.products||[]).filter((p,i)=>{
+    return !(db.purchaseOrders||[]).some(o=>(o.items||[]).some(x=>String(x.reqId)===String(r.id)&&Number(x.reqIndex)===i));
+  }).map((p)=>({...p,reqIndex:(r.products||[]).indexOf(p)}));
+}
+function reqMaterialsLabel(r){return (r.products||[]).map(p=>`${esc(p.code||'')} - ${esc(p.name||productName(p.code))} — ${qtyUnit(p.qty,p.unit||productUnit(p.code))}${p.company?' — '+esc(p.company):''}`).join('<br>')}
+
+function delEntry(id){
+  const e=db.entries.find(x=>String(x.id)===String(id)); if(!e)return;
+  if(!confirm('Excluir esta entrada? O estoque e o status da OC serão recalculados.'))return;
+  db.entries=db.entries.filter(x=>String(x.id)!==String(id)); save();
+}
+
+function openEntry(){
+  const active=activePurchaseOrders();
+  if(!active.length){alert('Não há Ordens de Compra ativas para dar entrada.');return;}
+  const companies=[...new Set(active.map(o=>o.company).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  openModal('Nova entrada',`<div class="formgrid"><div><label>Data</label><input id="eDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Nota Fiscal</label><input id="eNF" inputmode="numeric" placeholder="000.000.000"></div><div><label>Empresa / Fornecedor</label><select id="eSupplier"><option value="">Selecione...</option>${companies.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select></div></div><div class="notice">Somente empresas com OCs ativas aparecem. Depois de escolher a empresa, apenas REQs, OCs e materiais dessa empresa ficam disponíveis.</div><h3>Materiais</h3><div id="entryRows"></div><button type="button" class="secondary" id="addEntryBtn">+ Material</button><div class="rowactions"><button type="button" class="btn" id="saveEntryBtn">Salvar entrada</button></div>`);
+  document.getElementById('eSupplier').onchange=()=>{document.getElementById('entryRows').innerHTML='';addEntryRow();};
+  document.getElementById('addEntryBtn').onclick=addEntryRow;
+  document.getElementById('saveEntryBtn').onclick=saveEntry;
+}
+function entryOptionsForCompany(){
+  const company=document.getElementById('eSupplier')?.value; if(!company)return [];
+  const out=[];
+  activePurchaseOrders().filter(o=>o.company===company).forEach(o=>(o.items||[]).forEach(item=>{
+    const remaining=Number(item.qty||0)-purchaseOrderDeliveredQty(o,item);
+    if(remaining>0) out.push({o,item,remaining});
+  }));
+  return out;
+}
+function addEntryRow(){
+  const host=document.getElementById('entryRows');if(!host)return;const arr=entryOptionsForCompany();
+  if(!arr.length){host.innerHTML='<div class="notice">Selecione uma empresa com materiais pendentes em OCs ativas.</div>';return;}
+  const d=document.createElement('div');d.className='rowitem';
+  d.innerHTML=`<div class="formgrid"><div><label>REQ</label><select class="req"><option value="">Selecione...</option>${[...new Map(arr.map(x=>[x.item.reqNumber,x])).values()].map(x=>`<option value="${esc(x.item.reqNumber)}">${esc(x.item.reqNumber)}</option>`).join('')}</select></div><div><label>OC</label><select class="oc"><option value="">Selecione...</option></select></div><div><label>Material</label><select class="product"><option value="">Selecione...</option></select></div><div><label>Quantidade</label><input class="qty" type="number" min="0.001" step="0.001"></div><div><label>Valor unitário</label><input class="unit" readonly></div><div><label>Valor total</label><input class="total" readonly></div></div><div class="rowactions"><button type="button" class="danger removeEntry">Remover</button></div>`;
+  const req=d.querySelector('.req'),oc=d.querySelector('.oc'),prod=d.querySelector('.product'),qtyEl=d.querySelector('.qty');
+  function refreshOC(){const rn=req.value;const xs=arr.filter(x=>x.item.reqNumber===rn);oc.innerHTML='<option value="">Selecione...</option>'+xs.map(x=>`<option value="${esc(x.o.number)}">${esc(x.o.number)}</option>`).join('');prod.innerHTML='<option value="">Selecione...</option>';d.querySelector('.unit').value='';d.querySelector('.total').value='';qtyEl.value='';}
+  function refreshProd(){const on=oc.value;const xs=arr.filter(x=>x.item.reqNumber===req.value&&x.o.number===on);prod.innerHTML='<option value="">Selecione...</option>'+xs.map(x=>`<option value="${esc(x.item.code)}" data-req="${esc(x.item.reqNumber)}">${esc(x.item.code)} - ${esc(productName(x.item.code))} (${qtyUnit(x.remaining,x.item.unit||productUnit(x.item.code))})</option>`).join('');}
+  function refreshValue(){const x=arr.find(x=>x.item.reqNumber===req.value&&x.o.number===oc.value&&x.item.code===prod.value);if(!x)return;qtyEl.max=x.remaining;qtyEl.value=Math.min(Number(qtyEl.value||x.remaining),x.remaining);d.querySelector('.unit').value=money(x.item.unitValue);d.querySelector('.total').value=money(Number(qtyEl.value||0)*x.item.unitValue);}
+  req.onchange=()=>{refreshOC();};oc.onchange=()=>{refreshProd();};prod.onchange=()=>refreshValue();qtyEl.oninput=()=>refreshValue();d.querySelector('.removeEntry').onclick=()=>d.remove();host.appendChild(d);
+}
+function saveEntry(){
+  const date=document.getElementById('eDate')?.value,nf=formatNF(document.getElementById('eNF')?.value||''),supplier=document.getElementById('eSupplier')?.value;
+  if(!date||!nf||!supplier){alert('Informe Data, Nota Fiscal e Empresa/Fornecedor.');return;}
+  const rows=[...document.querySelectorAll('#entryRows .rowitem')].map(d=>{const req=d.querySelector('.req')?.value,oc=d.querySelector('.oc')?.value,code=d.querySelector('.product')?.value,qty=Number(d.querySelector('.qty')?.value);const o=db.purchaseOrders.find(x=>x.number===oc);const item=o?.items?.find(x=>x.reqNumber===req&&x.code===code);return {req,oc,productCode:code,qty,unitValue:Number(item?.unitValue||0),supplier};}).filter(r=>r.productCode);
+  if(!rows.length){alert('Adicione pelo menos um material.');return;}
+  for(const r of rows){const o=db.purchaseOrders.find(x=>x.number===r.oc);const item=o?.items?.find(x=>x.reqNumber===r.req&&x.code===r.productCode);const rem=Number(item?.qty||0)-purchaseOrderDeliveredQty(o,item);if(!o||o.company!==supplier||!item||r.qty<=0||r.qty>rem+1e-9){alert(`A quantidade informada para ${r.productCode} ultrapassa o saldo disponível da OC.`);return;}}
+  rows.forEach(r=>db.entries.push({id:Date.now()+Math.random(),createdAt:Date.now()+Math.random(),date,nf,supplier,req:r.req,oc:r.oc,productCode:r.productCode,qty:r.qty,unitValue:r.unitValue}));
+  closeModal();save();alert('Entrada salva com sucesso.');
+}
+
+function openPurchaseRequest(){openPurchaseRequestMode(false);}
+function openPurchaseRequestMode(diversa){
+  if(!diversa && !db.products.length){alert('Cadastre pelo menos um produto antes de criar uma REQ.');return;}
+  const sectorOptions=`<option value="">DIVERSOS</option>${db.sectors.map(s=>`<option value="${esc(s.code)}">${esc(s.name)}</option>`).join('')}`;
+  openModal(diversa?'Nova REQ Diversa':'Nova REQ',`<div class="formgrid"><div><label>Nº do Pedido</label><input id="rNumber" value="${nextPurchaseRequestNumber()}" readonly></div><div><label>Data</label><input id="rDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Setor</label><select id="rSector">${sectorOptions}</select></div><div><label>Centro de Custo</label><input id="rCC" value="00.00-000" readonly></div></div><h3>Materiais (máximo 20)</h3><div id="reqProductRows"></div><button type="button" class="secondary" id="addReqProductBtn">+ Material</button><div class="rowactions"><button type="button" class="btn" id="savePurchaseRequestBtn">Criar REQ</button></div>`);
+  const sec=document.getElementById('rSector');sec.onchange=()=>{const s=db.sectors.find(x=>x.code===sec.value);document.getElementById('rCC').value=formatCC(s?.cc||'00.00-000');};
+  document.getElementById('addReqProductBtn').onclick=()=>addPurchaseRequestRow2(diversa);document.getElementById('savePurchaseRequestBtn').onclick=()=>savePurchaseRequest2(diversa);addPurchaseRequestRow2(diversa);
+}
+function addPurchaseRequestRow2(diversa){const host=document.getElementById('reqProductRows');if(!host)return;if(host.children.length>=20){alert('Máximo de 20 materiais por REQ.');return;}const d=document.createElement('div');d.className='rowitem';d.innerHTML=diversa?`<div class="formgrid"><div><label>Material</label><input class="req-name" placeholder="Nome do material"></div><div><label>Quantidade</label><input class="req-qty" type="number" min="0.001" step="0.001"></div><div><label>Unidade</label>${unitSelect('u'+Date.now(),'UN')}</div></div><div class="rowactions"><button type="button" class="danger removeReqMaterial">Excluir Material</button></div>`:`<div class="formgrid"><div><label>Código</label>${productSelect('req-code')}</div><div><label>Material</label><input class="req-name" readonly></div><div><label>Quantidade</label><input class="req-qty" type="number" min="0.001" step="0.001"></div><div><label>Unidade</label><input class="req-unit" readonly></div></div><div class="rowactions"><button type="button" class="danger removeReqMaterial">Excluir Material</button></div>`;
+  if(!diversa){const ps=d.querySelector('.req-code');const name=d.querySelector('.req-name'),u=d.querySelector('.req-unit');ps.onchange=()=>{name.value=productName(ps.value);u.value=productUnit(ps.value);};}d.querySelector('.removeReqMaterial').onclick=()=>d.remove();host.appendChild(d);}
+function savePurchaseRequest2(diversa){const sec=document.getElementById('rSector').value,s=db.sectors.find(x=>x.code===sec),rows=[...document.querySelectorAll('#reqProductRows .rowitem')].map(d=>{if(diversa)return {code:'',name:d.querySelector('.req-name').value.trim(),qty:Number(d.querySelector('.req-qty').value),unit:d.querySelector('select').value};const code=d.querySelector('.req-code').value;return {code,name:productName(code),qty:Number(d.querySelector('.req-qty').value),unit:productUnit(code)};});if(!rows.length||rows.some(r=>!r.name||!Number.isFinite(r.qty)||r.qty<=0)){alert('Preencha corretamente todos os materiais.');return;}if(!diversa&&new Set(rows.map(r=>r.code)).size!==rows.length){alert('Não repita o mesmo material na REQ.');return;}db.purchaseRequests.push({id:Date.now()+Math.random(),createdAt:Date.now(),number:document.getElementById('rNumber').value,date:document.getElementById('rDate').value,sectorCode:sec,sector:s?.name||'DIVERSOS',cc:formatCC(s?.cc||'00.00-000'),products:rows,status:'pending',type:diversa?'diversa':'normal',companies:[],budgetConcluded:false});save();closeModal();alert('REQ criada e enviada para Gestão.');}
+
+function openPurchaseRequestReview(id){const r=db.purchaseRequests.find(x=>String(x.id)===String(id));if(!r)return;const editable=r.status==='pending';const comps=(r.companies||[]);openModal('REQ '+r.number,`<div class="formgrid"><div><label>Nº do Pedido</label><input value="${esc(r.number)}" readonly></div><div><label>Data</label><input value="${formatDate(r.date)}" readonly></div><div><label>Setor</label><input value="${esc(r.sector)}" readonly></div><div><label>Centro de Custo</label><input value="${esc(formatCC(r.cc))}" readonly></div></div><h3>Três empresas para cotação</h3><div class="formgrid"><div><label>Empresa 1</label><input id="reqComp1" value="${esc(comps[0]||'')}" ${editable?'':'readonly'}></div><div><label>Empresa 2</label><input id="reqComp2" value="${esc(comps[1]||'')}" ${editable?'':'readonly'}></div><div><label>Empresa 3</label><input id="reqComp3" value="${esc(comps[2]||'')}" ${editable?'':'readonly'}></div></div><h3>Materiais</h3><div id="reviewReqRows">${(r.products||[]).map((p,i)=>`<div class="rowitem"><div class="formgrid"><div><label>${r.type==='diversa'?'Material':'Código'}</label><input class="rev-code" data-i="${i}" value="${esc(r.type==='diversa'?p.name:p.code)}" ${editable?'':'readonly'}></div><div><label>Quantidade</label><input class="rev-qty" data-i="${i}" value="${p.qty}" ${editable?'':'readonly'}></div><div><label>Unidade</label><input value="${esc(p.unit||productUnit(p.code))}" readonly></div></div></div>`).join('')}</div><div class="rowactions">${editable?'<button type="button" class="secondary" id="saveReqCorrectionBtn">Salvar edição</button><button type="button" class="btn" id="approveReqBtn">Enviar para Orçamentos</button><button type="button" class="danger" id="denyReqBtn">Negar</button>':''}<button type="button" class="secondary" id="printReqBtn">Imprimir</button></div>`);document.getElementById('printReqBtn').onclick=()=>printPurchaseRequest(id);if(editable){document.getElementById('saveReqCorrectionBtn').onclick=()=>saveReqReview2(id,false);document.getElementById('approveReqBtn').onclick=()=>saveReqReview2(id,true);document.getElementById('denyReqBtn').onclick=()=>{r.status='denied';save();closeModal();};}}
+function saveReqReview2(id,sendBudget){const r=db.purchaseRequests.find(x=>String(x.id)===String(id));const companies=[1,2,3].map(i=>document.getElementById('reqComp'+i).value.trim()).filter(Boolean);if(sendBudget&&companies.length!==3){alert('Informe as 3 empresas antes de aprovar a REQ.');return;}if(new Set(companies).size!==companies.length){alert('As 3 empresas precisam ser diferentes.');return;}const rows=[...document.querySelectorAll('#reviewReqRows .rowitem')].map((d,i)=>{const v=d.querySelector('.rev-code').value.trim(),q=Number(d.querySelector('.rev-qty').value);return r.type==='diversa'?{code:'',name:v,qty:q,unit:r.products[i].unit}:{code:v,name:productName(v),qty:q,unit:productUnit(v)};});if(rows.some(x=>!x.name||x.qty<=0||!Number.isFinite(x.qty))){alert('Materiais inválidos.');return;}r.products=rows;r.companies=companies;if(sendBudget){r.status='budget_pending';r.budgetConcluded=false;}save();closeModal();alert(sendBudget?'REQ aprovada e enviada para Orçamentos para Aprovação.':'Alterações salvas.');}
+function printPurchaseRequest(id){const r=db.purchaseRequests.find(x=>String(x.id)===String(id));if(!r)return;const w=window.open('','_blank');if(!w){alert('Permita pop-ups para imprimir.');return;}const rows=(r.products||[]).map(p=>`<tr><td>${esc(p.code||'')}</td><td>${esc(p.name||productName(p.code))}</td><td>${padNumber(p.qty,2)}</td><td>${esc(p.unit||productUnit(p.code))}</td><td>${esc(p.company||'')}</td></tr>`).join('');w.document.write(`<html><head><title>REQ ${esc(r.number)}</title><style>body{font-family:Arial;background:#f3f5f7;padding:24px}.print-sheet{border:3px solid #173b2d;border-radius:14px;padding:22px;background:#fff}.print-sheet h1{color:#173b2d;border-bottom:2px solid #173b2d;padding-bottom:10px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cfd6dd;padding:8px}th{background:#eef4f0;color:#173b2d}</style></head><body><div class="print-sheet"><h1>Requisição de Compra — ${esc(r.number)}</h1><p><b>Data:</b> ${formatDate(r.date)} &nbsp; <b>Setor:</b> ${esc(r.sector)} &nbsp; <b>Centro de Custo:</b> ${esc(r.cc)}</p><table><thead><tr><th>Código</th><th>Material</th><th>Quantidade</th><th>Unidade</th><th>Empresa</th></tr></thead><tbody>${rows}</tbody></table></div><script>window.onload=()=>window.print();<\/script></body></html>`);w.document.close();}
+
+function openBudgetReview(id){const r=db.purchaseRequests.find(x=>String(x.id)===String(id));if(!r)return;const companies=approvedReqCompanies(r);openModal('Orçamento — REQ '+r.number,`<div class="notice">Escolha uma das 3 empresas aprovadas para cada material e clique em Concluir.</div><p><b>Empresas:</b> ${companies.map(esc).join(' • ')}</p><div id="budgetRows">${(r.products||[]).map((p,i)=>`<div class="rowitem"><div class="formgrid"><div><label>Material</label><input value="${esc(p.name||productName(p.code))}" readonly></div><div><label>Quantidade</label><input value="${qtyUnit(p.qty,p.unit||productUnit(p.code))}" readonly></div><div><label>Empresa</label><select class="budget-company" data-i="${i}"><option value="">Selecione...</option>${companies.map(c=>`<option value="${esc(c)}" ${c===p.company?'selected':''}>${esc(c)}</option>`).join('')}</select></div></div></div>`).join('')}</div><div class="rowactions"><button class="btn" id="concludeBudgetBtn">Concluir</button><button class="secondary" onclick="printPurchaseRequest(${id})">Imprimir REQ</button></div>`);document.getElementById('concludeBudgetBtn').onclick=()=>{const sels=[...document.querySelectorAll('.budget-company')];if(sels.some(s=>!s.value)){alert('Escolha a empresa de todos os materiais.');return;}sels.forEach(s=>r.products[Number(s.dataset.i)].company=s.value);r.budgetConcluded=true;r.status='approved';r.budgetDate=new Date().toISOString().slice(0,10);save();closeModal();alert('Orçamento concluído. A REQ está disponível para criação de OC.');};}
+
+function openPurchaseOrder(){openPurchaseOrderMode(false);}
+function openPurchaseOrderMode(diversa){
+  const reqs=(db.purchaseRequests||[]).filter(r=>r.status==='approved' && r.budgetConcluded);
+  let available=reqs.flatMap(r=>remainingReqProducts2(r).map(p=>({r,p}))).filter(x=>x.p.company);
+  if(!diversa&&!available.length){alert('Não há materiais de REQs aprovadas disponíveis para uma OC.');return;}
+  const companies=[...new Set(available.map(x=>x.p.company).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  openModal(diversa?'Nova OC Diversa':'Nova Ordem de Compra',`<div class="formgrid"><div><label>Nº da OC</label><input id="ocNumber" value="${nextPurchaseOrderNumber()}" readonly></div><div><label>Data</label><input id="ocDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Empresa</label>${diversa?'<input id="ocCompany" placeholder="Empresa">':`<select id="ocCompany"><option value="">Selecione...</option>${companies.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select>`}</div><div><label>Centro de Custos</label><input id="ocCC" value="00.00-000"></div></div><h3>Materiais</h3><div id="ocItems"></div><div class="rowactions"><button type="button" class="btn" id="saveOcBtn">Criar OC</button></div>`);
+  document.getElementById('ocCompany').onchange=()=>{if(!diversa)renderOcItems2();};document.getElementById('saveOcBtn').onclick=()=>savePurchaseOrder2(diversa);if(!diversa)renderOcItems2();else renderOcItemsDiversa();
+}
+function renderOcItems2(){const host=document.getElementById('ocItems'),company=document.getElementById('ocCompany').value;if(!host)return;const arr=(db.purchaseRequests||[]).filter(r=>r.status==='approved'&&r.budgetConcluded).flatMap(r=>remainingReqProducts2(r).filter(p=>p.company===company).map(p=>({r,p})));host.innerHTML=arr.map((x,i)=>`<div class="rowitem"><label><input type="checkbox" class="oc-check2" data-i="${i}"> REQ ${esc(x.r.number)} — ${esc(x.p.name||productName(x.p.code))} — ${qtyUnit(x.p.qty,x.p.unit||productUnit(x.p.code))}</label><div class="formgrid"><div><label>Valor do material</label><input class="oc-unit-value" data-i="${i}" inputmode="decimal" placeholder="0,00"></div><div><label>Valor total do material</label><input class="oc-total-value" data-i="${i}" readonly></div></div></div>`).join('')||'<div class="notice">Nenhum material disponível para esta empresa.</div>';host._items=arr;host.querySelectorAll('.oc-unit-value').forEach(el=>el.oninput=()=>{const x=arr[Number(el.dataset.i)];document.querySelector(`.oc-total-value[data-i="${el.dataset.i}"]`).value=money(parseMoney(el.value)*Number(x.p.qty||0));});}
+function renderOcItemsDiversa(){const host=document.getElementById('ocItems');host.innerHTML=`<div class="rowitem"><div class="formgrid"><div><label>REQ</label><input class="div-req"></div><div><label>Material</label><input class="div-name"></div><div><label>Quantidade</label><input class="div-qty" type="number" min="0.001" step="0.001"></div><div><label>Unidade</label>${unitSelect('div-unit','UN')}</div><div><label>Valor do material</label><input class="div-unit-value" inputmode="decimal"></div><div><label>Valor total do material</label><input class="div-total-value" readonly></div></div></div>`;document.querySelector('.div-unit-value').oninput=()=>document.querySelector('.div-total-value').value=money(parseMoney(document.querySelector('.div-unit-value').value)*Number(document.querySelector('.div-qty').value||0));}
+function savePurchaseOrder2(diversa){const company=document.getElementById('ocCompany').value.trim();if(!company){alert('Informe a empresa.');return;}const cc=formatCC(document.getElementById('ocCC').value)||'00.00-000';if(diversa){const d=document.querySelector('#ocItems .rowitem');const name=d.querySelector('.div-name').value.trim(),qty=Number(d.querySelector('.div-qty').value),unit=d.querySelector('select').value,uv=parseMoney(d.querySelector('.div-unit-value').value);if(!name||qty<=0||uv<0){alert('Preencha o material, quantidade e valor.');return;}db.purchaseOrders.push({id:Date.now()+Math.random(),createdAt:Date.now(),number:document.getElementById('ocNumber').value,date:document.getElementById('ocDate').value,company,cc,type:'diversa',status:'open',items:[{reqNumber:d.querySelector('.div-req').value.trim(),code:'',name,qty,unit,unitValue:uv,totalValue:qty*uv,company}]});save();closeModal();alert('OC Diversa criada.');return;}
+  const host=document.getElementById('ocItems'),arr=host._items||[],checks=[...document.querySelectorAll('.oc-check2')],selected=checks.map((c,i)=>c.checked?{...arr[i],unitValue:parseMoney(document.querySelector(`.oc-unit-value[data-i="${i}"]`).value)}:null).filter(Boolean);if(!selected.length){alert('Selecione pelo menos um material.');return;}if(selected.some(x=>x.unitValue<0)){alert('Valor inválido.');return;}db.purchaseOrders.push({id:Date.now()+Math.random(),createdAt:Date.now(),number:document.getElementById('ocNumber').value,date:document.getElementById('ocDate').value,company,cc,type:'normal',status:'open',items:selected.map(x=>({reqId:x.r.id,reqIndex:x.p.reqIndex,reqNumber:x.r.number,code:x.p.code,name:x.p.name||productName(x.p.code),qty:Number(x.p.qty),unit:x.p.unit||productUnit(x.p.code),unitValue:x.unitValue,totalValue:Number(x.p.qty)*x.unitValue,company}))});save();closeModal();alert('OC criada com sucesso.');}
+
+function openPurchaseOrderEdit(id){const o=db.purchaseOrders.find(x=>String(x.id)===String(id));if(!o)return;if(purchaseOrderStatus(o)!=='open'){alert('Este orçamento não pode ser alterado porque a OC não está Em Aberto.');return;}const companies=(o.items||[]).flatMap(i=>{const r=db.purchaseRequests.find(r=>String(r.id)===String(i.reqId));return r?.companies||[]}).filter(Boolean);const opts=[...new Set(companies)];openModal('Alterar orçamento — '+o.number,`<div class="notice">A alteração só é permitida enquanto a OC estiver Em Aberto. A mudança será registrada com data.</div><div id="editBudgetRows">${(o.items||[]).map((i,n)=>`<div class="rowitem"><div class="formgrid"><div><label>Material</label><input value="${esc(i.name||productName(i.code))}" readonly></div><div><label>Empresa</label><select class="edit-budget-company" data-i="${n}">${opts.map(c=>`<option value="${esc(c)}" ${c===i.company?'selected':''}>${esc(c)}</option>`).join('')}</select></div></div></div>`).join('')}</div><div class="rowactions"><button class="btn" id="saveBudgetEditBtn">Salvar alteração</button></div>`);document.getElementById('saveBudgetEditBtn').onclick=()=>{const changed=[];document.querySelectorAll('.edit-budget-company').forEach(s=>{const i=o.items[Number(s.dataset.i)];if(i.company!==s.value){i.previousCompany=i.company;i.company=s.value;i.companyChangedAt=new Date().toISOString();changed.push(i.name||i.code);}});o.companyChanged=changed.length>0;save();closeModal();alert(changed.length?'Orçamento alterado. A alteração e a data foram registradas.':'Nenhuma alteração feita.');};}
+
+function printPurchaseOrder(id){const o=db.purchaseOrders.find(x=>String(x.id)===String(id));if(!o)return;const w=window.open('','_blank');if(!w){alert('Permita pop-ups para imprimir.');return;}const rows=(o.items||[]).map(x=>`<tr><td>${esc(x.reqNumber||'')}</td><td>${esc(x.code||'')}</td><td>${esc(x.name||productName(x.code))}</td><td>${qtyUnit(x.qty,x.unit)}</td><td>${money(x.unitValue)}</td><td>${money(x.totalValue)}</td></tr>`).join('');w.document.write(`<html><head><title>OC ${esc(o.number)}</title><style>body{font-family:Arial;background:#f3f5f7;padding:24px}.print-sheet{border:3px solid #173b2d;border-radius:14px;padding:22px;background:#fff}.print-sheet h1{color:#173b2d;border-bottom:2px solid #173b2d;padding-bottom:10px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cfd6dd;padding:8px}th{background:#eef4f0;color:#173b2d}</style></head><body><div class="print-sheet"><h1>Ordem de Compra — ${esc(o.number)}</h1><p><b>Data:</b> ${formatDate(o.date)} &nbsp; <b>Empresa:</b> ${esc(o.company)} &nbsp; <b>Centro de Custos:</b> ${esc(o.cc)}</p><p><b>Status:</b> ${purchaseOrderStatusLabel(o)}</p><table><thead><tr><th>REQ</th><th>Código</th><th>Material</th><th>Quantidade</th><th>Valor unitário</th><th>Valor total</th></tr></thead><tbody>${rows}</tbody></table></div><script>window.onload=()=>window.print();<\/script></body></html>`);w.document.close();}
+
+function printBudget(id){const r=db.purchaseRequests.find(x=>String(x.id)===String(id));if(!r)return;printPurchaseRequest(id);}
+function renderPurchaseLists(){
+ const reqs=[...(db.purchaseRequests||[])].sort((a,b)=>parseInt(digits(b.number))-parseInt(digits(a.number)));
+ const rows=reqs.map(r=>`<tr class="${r.status==='denied'?'request-denied':r.status==='approved'?'request-approved':'request-pending'}"><td>${esc(r.number)}</td><td>${formatDate(r.date)}</td><td>${esc(r.sector)}</td><td>${esc(formatCC(r.cc))}</td><td>${reqMaterialsLabel(r)}</td><td>${r.status==='budget_pending'?'Em Orçamento':reqStatus(r)}</td><td><button class="secondary" onclick="openPurchaseRequestReview(${r.id})">Abrir</button> <button class="secondary" onclick="printPurchaseRequest(${r.id})">Imprimir</button></td></tr>`).join('')||'<tr><td colspan="7">Nenhuma REQ cadastrada.</td></tr>';
+ ['reqBody','reqManagementListBody'].forEach(id=>{const b=document.getElementById(id);if(b)b.innerHTML=rows;});
+ const pending=reqs.filter(r=>r.status==='pending');const ab=document.getElementById('reqApprovalBody');if(ab)ab.innerHTML=pending.map(r=>`<tr><td>${esc(r.number)}</td><td>${formatDate(r.date)}</td><td>${esc(r.sector)}</td><td>${esc(r.cc)}</td><td>${reqMaterialsLabel(r)}</td><td>Pendente</td><td><button class="secondary" onclick="openPurchaseRequestReview(${r.id})">Abrir</button></td></tr>`).join('')||'<tr><td colspan="7">Nenhuma REQ pendente.</td></tr>';
+ const ba=document.getElementById('budgetApprovalBody');if(ba)ba.innerHTML=reqs.filter(r=>r.status==='budget_pending'&&!r.budgetConcluded).map(r=>`<tr><td>${esc(r.number)}</td><td>${formatDate(r.date)}</td><td>${esc(r.sector)}</td><td>${reqMaterialsLabel(r)}</td><td>${approvedReqCompanies(r).map(esc).join('<br>')}</td><td><button class="secondary" onclick="openBudgetReview(${r.id})">Distribuir materiais</button></td></tr>`).join('')||'<tr><td colspan="6">Nenhum orçamento pendente.</td></tr>';
+ const bl=document.getElementById('budgetListBody');if(bl)bl.innerHTML=reqs.filter(r=>r.status==='approved'&&r.budgetConcluded).map(r=>`<tr><td>${esc(r.number)}</td><td>${formatDate(r.date)}</td><td>${reqMaterialsLabel(r)}</td><td>Concluído</td><td><button class="secondary" onclick="printBudget(${r.id})">Imprimir</button>${budgetCanEdit(r)?` <button class="secondary" onclick="openBudgetReview(${r.id})">Alterar empresas</button>`:''}</td></tr>`).join('')||'<tr><td colspan="5">Nenhum orçamento concluído.</td></tr>';
+ const ob=document.getElementById('purchaseOrdersBody');if(ob)ob.innerHTML=[...(db.purchaseOrders||[])].sort((a,b)=>parseInt(digits(b.number))-parseInt(digits(a.number))).map(o=>`<tr class="${purchaseOrderRowClass(o)}"><td>${esc(o.number)}</td><td>${formatDate(o.date)}</td><td>${esc(o.company)}</td><td>${esc(formatCC(o.cc))}</td><td>${[...new Set((o.items||[]).map(x=>x.reqNumber).filter(Boolean))].join('<br>')}</td><td>${(o.items||[]).map(x=>`${esc(x.code||'')} - ${esc(x.name||productName(x.code))} — ${qtyUnit(x.qty,x.unit)}`).join('<br>')}</td><td>${purchaseOrderStatusLabel(o)}</td><td><button class="secondary" onclick="printPurchaseOrder(${o.id})">Imprimir</button>${o.type==='diversa'?` <button class="secondary" onclick="manualDiversaStatus(${o.id})">Alterar status</button>`:(purchaseOrderStatus(o)==='open'?` <button class="secondary" onclick="openPurchaseOrderEdit(${o.id})">Editar orçamento</button>`:'')}</td></tr>`).join('')||'<tr><td colspan="8">Nenhuma OC cadastrada.</td></tr>';
+}
+
+// Hook action buttons, including the two new "Diversa" buttons.
+const __oldClickHandler = document.onclick;
+document.addEventListener('click',function(ev){const b=ev.target.closest('[data-action="new-req-diversa"]');if(b){ev.preventDefault();openPurchaseRequestMode(true);return;}const c=ev.target.closest('[data-action="new-purchase-order-diversa"]');if(c){ev.preventDefault();openPurchaseOrderMode(true);return;}});
+
+// Final render wrapper: preserve existing screens and then render the patched purchase/entry views.
+const __renderBeforePatch=renderAll;
+renderAll=function(){__renderBeforePatch();renderPurchaseLists();
+ const entryBody=document.getElementById('entryBody');if(entryBody){const list=[...(db.entries||[])].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));let nfIndex=new Map(),n=0;list.forEach(e=>{const k=String(e.nf||'');if(!nfIndex.has(k))nfIndex.set(k,n++);});entryBody.innerHTML=list.map(e=>{const o=db.purchaseOrders.find(x=>x.number===e.oc),cls=o?purchaseOrderRowClass(o):'entry-group-white';return `<tr class="${cls}"><td>${formatDate(e.date)}</td><td>${formatNF(e.nf)}</td><td>${esc(e.supplier||'')}</td><td>${esc(e.req||'')}</td><td>${esc(e.oc||'')}</td><td>${esc(productName(e.productCode))}</td><td>${qtyUnit(e.qty,productUnit(e.productCode))}</td><td>${money(e.unitValue)}</td><td>${money(Number(e.qty)*Number(e.unitValue))}</td><td><button class="danger" onclick="delEntry(${e.id})">Excluir</button></td></tr>`;}).join('')||'<tr><td colspan="10">Nenhuma entrada cadastrada.</td></tr>';}
+};
+
+
+function budgetRelatedOrders(r){return (db.purchaseOrders||[]).filter(o=>(o.items||[]).some(i=>String(i.reqId)===String(r.id)));}
+function budgetCanEdit(r){return budgetRelatedOrders(r).every(o=>purchaseOrderStatus(o)==='open');}
+function printBudget(id){const r=db.purchaseRequests.find(x=>String(x.id)===String(id));if(!r)return;const w=window.open('','_blank');if(!w){alert('Permita pop-ups para imprimir.');return;}const rows=(r.products||[]).map(p=>`<tr><td>${esc(p.code||'')}</td><td>${esc(p.name||productName(p.code))}</td><td>${qtyUnit(p.qty,p.unit)}</td><td>${esc(p.company||'')}</td></tr>`).join('');w.document.write(`<html><head><title>Orçamento ${esc(r.number)}</title><style>body{font-family:Arial;background:#f3f5f7;padding:24px}.print-sheet{border:3px solid #173b2d;border-radius:14px;padding:22px;background:#fff}.print-sheet h1{color:#173b2d;border-bottom:2px solid #173b2d;padding-bottom:10px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cfd6dd;padding:8px}th{background:#eef4f0;color:#173b2d}</style></head><body><div class='print-sheet'><h1>Orçamento — REQ ${esc(r.number)}</h1><p><b>Data:</b> ${formatDate(r.date)} &nbsp; <b>Setor:</b> ${esc(r.sector)} &nbsp; <b>Centro de Custo:</b> ${esc(r.cc)}</p><table><thead><tr><th>Código</th><th>Material</th><th>Quantidade</th><th>Empresa</th></tr></thead><tbody>${rows}</tbody></table></div><script>window.onload=()=>window.print();<\/script></body></html>`);w.document.close();}
+function manualDiversaStatus(id){const o=db.purchaseOrders.find(x=>String(x.id)===String(id));if(!o||o.type!=='diversa')return;const v=prompt('Digite: Em Aberto, Parcialmente entregue ou Entregue',purchaseOrderStatusLabel(o));if(v===null)return;const m={'Em Aberto':'open','Parcialmente entregue':'partial','Entregue':'delivered'};if(!m[v]){alert('Status inválido.');return;}o.status=m[v];o.statusChangedAt=new Date().toISOString();save();}
+
+function approvedSuppliersForNotes(){return [...new Set([...(db.purchaseRequests||[]).filter(r=>r.status==='approved'&&r.budgetConcluded).flatMap(r=>(r.products||[]).map(p=>p.company)),...(db.purchaseOrders||[]).map(o=>o.company)].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));}
+function openNote(){const suppliers=approvedSuppliersForNotes();if(!suppliers.length){alert('Não há fornecedores aprovados disponíveis.');return;}openModal('Nova nota fiscal',`<div class="formgrid"><div><label>Fornecedor</label><select id="nFor"><option value="">Selecione...</option>${suppliers.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select></div><div><label>Número da Nota Fiscal</label><input id="nNum" inputmode="numeric"></div><div><label>Finalidade</label>${purposeSelect()}</div></div><h3>REQ / OC / Materiais</h3><div id="reqRows"></div><button type="button" class="secondary" id="addReqBtn">+ REQ / OC / Material</button><div class="notice">O valor da nota é calculado pelos valores totais dos materiais das OCs selecionadas.</div><div class="rowactions"><button type="button" class="btn" id="saveNoteBtn">Salvar nota fiscal</button></div>`);document.getElementById('addReqBtn').onclick=addNoteRow;document.getElementById('saveNoteBtn').onclick=saveNote;addNoteRow();}
+function addNoteRow(){const host=document.getElementById('reqRows');if(!host)return;const d=document.createElement('div');d.className='rowitem';d.innerHTML='<div class="formgrid"><div><label>REQ</label><select class="req"></select></div><div><label>OC</label><select class="oc"></select></div><div><label>Material</label><select class="mat"></select></div><div><label>Valor total</label><input class="line-total" readonly></div></div><div class="rowactions"><button type="button" class="danger removeReq">Remover</button></div>';const req=d.querySelector('.req'),oc=d.querySelector('.oc'),mat=d.querySelector('.mat'),tot=d.querySelector('.line-total');function loadReq(){const sup=document.getElementById('nFor').value;const arr=activePurchaseOrders().filter(o=>o.company===sup).flatMap(o=>(o.items||[]).map(i=>({o,i})));req.innerHTML='<option value="">Selecione...</option>'+[...new Set(arr.map(x=>x.i.reqNumber).filter(Boolean))].map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');oc.innerHTML='<option value="">Selecione...</option>';mat.innerHTML='<option value="">Selecione...</option>';tot.value='';}function loadOc(){const sup=document.getElementById('nFor').value;const arr=activePurchaseOrders().filter(o=>o.company===sup).flatMap(o=>(o.items||[]).map(i=>({o,i}))).filter(x=>!req.value||x.i.reqNumber===req.value);oc.innerHTML='<option value="">Selecione...</option>'+[...new Set(arr.map(x=>x.o.number))].map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');mat.innerHTML='<option value="">Selecione...</option>';tot.value='';}function loadMat(){const sup=document.getElementById('nFor').value;const arr=activePurchaseOrders().filter(o=>o.company===sup).flatMap(o=>(o.items||[]).map(i=>({o,i}))).filter(x=>(!req.value||x.i.reqNumber===req.value)&&x.o.number===oc.value);mat.innerHTML='<option value="">Selecione...</option>'+arr.map(x=>`<option value="${esc(x.i.code)}">${esc(x.i.name||productName(x.i.code))}</option>`).join('');tot.value='';}function loadValue(){const sup=document.getElementById('nFor').value;const x=activePurchaseOrders().filter(o=>o.company===sup).flatMap(o=>(o.items||[]).map(i=>({o,i}))).find(x=>(!req.value||x.i.reqNumber===req.value)&&x.o.number===oc.value&&x.i.code===mat.value);tot.value=x?money(x.i.totalValue):'';}req.onchange=loadOc;oc.onchange=loadMat;mat.onchange=loadValue;d.querySelector('.removeReq').onclick=()=>d.remove();document.getElementById('nFor').onchange=loadReq;host.appendChild(d);loadReq();}
+function saveNote(){const supplier=document.getElementById('nFor').value,number=formatNF(document.getElementById('nNum').value),purpose=document.getElementById('nPurpose').value.trim();if(!supplier||!number||!purpose){alert('Informe fornecedor, NF e finalidade.');return;}const lines=[...document.querySelectorAll('#reqRows .rowitem')].map(d=>{const req=d.querySelector('.req').value,oc=d.querySelector('.oc').value,code=d.querySelector('.mat').value,o=db.purchaseOrders.find(x=>x.number===oc),i=o?.items?.find(x=>x.reqNumber===req&&x.code===code);return {req,oc,code,qty:i?.qty||0,unit:i?.unit||'UN',totalValue:i?.totalValue||0};}).filter(x=>x.oc&&x.code);if(!lines.length){alert('Selecione pelo menos um material.');return;}const valid=lines.every(x=>{const o=db.purchaseOrders.find(o=>o.number===x.oc);return o&&o.company===supplier;});if(!valid){alert('REQ/OC incompatível com o fornecedor.');return;}const value=lines.reduce((s,x)=>s+Number(x.totalValue||0),0);db.notes.push({id:Date.now()+Math.random(),createdAt:Date.now(),supplier,number,value,purpose,reqs:lines});closeModal();save();alert('Nota fiscal salva: '+money(value));}
+// aliases for action delegation
+function newReqDiversa(){openPurchaseRequestMode(true)}
+function newOcDiversa(){openPurchaseOrderMode(true)}
+
+
+/* ================= PATCH EXCEL + NF AUTOMÁTICA + IMPRESSÕES ================= */
+function printWindowStyled(title, subtitle, metaHtml, tableHtml){
+  const w=window.open('','_blank');
+  if(!w){alert('Permita pop-ups para imprimir.');return;}
+  w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
+  @page{size:A4;margin:12mm}body{font-family:Arial,Helvetica,sans-serif;background:#eef2f0;color:#17202a;margin:0;padding:20px}
+  .sheet{max-width:900px;margin:0 auto;background:#fff;border:2px solid #173b2d;border-radius:16px;box-shadow:0 3px 14px #0002;overflow:hidden}
+  .head{background:#173b2d;color:#fff;padding:22px 24px}.head .brand{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.82;font-weight:700}.head h1{margin:6px 0 0;font-size:24px}.body{padding:22px 24px}.meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;background:#f5f8f6;border:1px solid #d9e2dc;border-radius:10px;padding:14px;margin-bottom:18px}.meta div{padding:4px 0}.subtitle{color:#68737d;margin:5px 0 16px}table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #cfd8d2;border-radius:10px;overflow:hidden}th{background:#eaf2ed;color:#173b2d;font-size:12px;text-transform:uppercase;letter-spacing:.03em}th,td{padding:9px 10px;border-right:1px solid #d9e1dc;border-bottom:1px solid #d9e1dc;text-align:left}th:last-child,td:last-child{border-right:0}tr:last-child td{border-bottom:0}.total{margin-top:16px;text-align:right;font-size:18px;font-weight:800;color:#173b2d}.foot{margin-top:18px;padding-top:10px;border-top:1px solid #d9e1dc;font-size:11px;color:#68737d;text-align:center}@media print{body{background:#fff;padding:0}.sheet{box-shadow:none}}
+  </style></head><body><div class="sheet"><div class="head"><div class="brand">${esc(db.settings?.name||'NexGiro SmartStock Sistem')}</div><h1>${esc(title)}</h1><div>${esc(subtitle||'')}</div></div><div class="body"><div class="meta">${metaHtml}</div>${tableHtml}<div class="foot">Documento gerado pelo sistema de estoque interno</div></div></div><script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
+function printPurchaseRequest(id){const r=db.purchaseRequests.find(x=>String(x.id)===String(id));if(!r)return;const rows=(r.products||[]).map(p=>`<tr><td>${esc(p.code||'—')}</td><td>${esc(p.name||productName(p.code))}</td><td>${qtyUnit(p.qty,p.unit||productUnit(p.code))}</td><td>${esc(p.company||'—')}</td></tr>`).join('');printWindowStyled('Requisição de Compra — '+r.number,r.status==='denied'?'Negada':r.status==='approved'?'Aprovada':'Pendente',`<div><b>Nº do Pedido:</b> ${esc(r.number)}</div><div><b>Data:</b> ${formatDate(r.date)}</div><div><b>Setor:</b> ${esc(r.sector||'DIVERSOS')}</div><div><b>Centro de Custo:</b> ${esc(formatCC(r.cc))}</div>`,`<table><thead><tr><th>Código</th><th>Material</th><th>Quantidade</th><th>Empresa</th></tr></thead><tbody>${rows}</tbody></table>`);}
+function printPurchaseOrder(id){const o=db.purchaseOrders.find(x=>String(x.id)===String(id));if(!o)return;const rows=(o.items||[]).map(x=>`<tr><td>${esc(x.reqNumber||'—')}</td><td>${esc(x.code||'—')}</td><td>${esc(x.name||productName(x.code))}</td><td>${qtyUnit(x.qty,x.unit||productUnit(x.code))}</td><td>${money(x.unitValue)}</td><td>${money(x.totalValue)}</td></tr>`).join('');const total=(o.items||[]).reduce((s,x)=>s+Number(x.totalValue||0),0);printWindowStyled('Ordem de Compra — '+o.number,purchaseOrderStatusLabel(o),`<div><b>Nº OC:</b> ${esc(o.number)}</div><div><b>Data:</b> ${formatDate(o.date)}</div><div><b>Empresa:</b> ${esc(o.company)}</div><div><b>Centro de Custos:</b> ${esc(formatCC(o.cc))}</div>`,`<table><thead><tr><th>REQ</th><th>Código</th><th>Material</th><th>Quantidade</th><th>Valor unitário</th><th>Valor total</th></tr></thead><tbody>${rows}</tbody></table><div class="total">Total: ${money(total)}</div>`);}
+function printBudget(id){const r=db.purchaseRequests.find(x=>String(x.id)===String(id));if(!r)return;const rows=(r.products||[]).map(p=>`<tr><td>${esc(p.code||'—')}</td><td>${esc(p.name||productName(p.code))}</td><td>${qtyUnit(p.qty,p.unit||productUnit(p.code))}</td><td>${esc(p.company||'—')}</td></tr>`).join('');printWindowStyled('Orçamento — REQ '+r.number,'Orçamento concluído',`<div><b>REQ:</b> ${esc(r.number)}</div><div><b>Data:</b> ${formatDate(r.date)}</div><div><b>Setor:</b> ${esc(r.sector)}</div><div><b>Centro de Custo:</b> ${esc(formatCC(r.cc))}</div>`,`<table><thead><tr><th>Código</th><th>Material</th><th>Quantidade</th><th>Empresa</th></tr></thead><tbody>${rows}</tbody></table>`);}
+function printMaterialRequest(id){const r=db.materialRequests.find(x=>String(x.id)===String(id));if(!r)return;const rows=(r.products||[]).map(p=>`<tr><td>${esc(p.productCode||'—')}</td><td>${esc(productName(p.productCode))}</td><td>${qtyUnit(p.qty,productUnit(p.productCode))}</td><td>${esc(p.reg||'—')}</td></tr>`).join('');let printStatus=requestStatusLabel(r);if(r.status==='approved'){if(r.used){printStatus=`Aprovada - Lançada na Saída (${formatDate(r.launchDate||r.exitLaunchedAt||'')}) - Saída N°:${esc(r.exitNumber||'—')}`;}else{printStatus=`Aprovada - ${esc(r.uniqueCode||'')}`;}}printWindowStyled('Requisição de Material — '+(r.sector||''),printStatus,`<div><b>Data:</b> ${formatDate(r.date)}</div><div><b>Setor:</b> ${esc(r.sector)}</div><div><b>Centro de Custos:</b> ${esc(formatCC(r.cc))}</div><div><b>Ordem de Manutenção:</b> ${esc(r.om||'—')}</div>`,`<table><thead><tr><th>Código</th><th>Material</th><th>Quantidade</th><th>Matrícula</th></tr></thead><tbody>${rows}</tbody></table>`);}
+
+function ensureEntryNote(nf,supplier,date,rows){
+  const existing=db.notes.find(n=>n.autoFromEntry && String(n.number)===String(nf) && String(n.supplier)===String(supplier));
+  const reqs=rows.map(r=>({req:r.req,oc:r.oc,code:r.productCode,qty:r.qty,unit:r.unit||productUnit(r.productCode),totalValue:Number(r.qty||0)*Number(r.unitValue||0)}));
+  const value=reqs.reduce((s,r)=>s+Number(r.totalValue||0),0);
+  if(existing){existing.date=date;existing.value=value;existing.reqs=reqs;existing.purpose='Estoque';}
+  else db.notes.push({id:Date.now()+Math.random(),createdAt:Date.now(),date,supplier,number:nf,value,purpose:'Estoque',reqs,autoFromEntry:true});
+}
+function saveEntry(){
+  const date=document.getElementById('eDate')?.value,nf=formatNF(document.getElementById('eNF')?.value||''),supplier=document.getElementById('eSupplier')?.value;
+  if(!date||!nf||!supplier){alert('Informe Data, Nota Fiscal e Empresa/Fornecedor.');return;}
+  const rows=[...document.querySelectorAll('#entryRows .rowitem')].map(d=>{const req=d.querySelector('.req')?.value,oc=d.querySelector('.oc')?.value,code=d.querySelector('.product')?.value,qty=Number(d.querySelector('.qty')?.value);const o=db.purchaseOrders.find(x=>x.number===oc);const item=o?.items?.find(x=>x.reqNumber===req&&x.code===code);return {req,oc,productCode:code,qty,unit:item?.unit||productUnit(code),unitValue:Number(item?.unitValue||0),supplier};}).filter(r=>r.productCode);
+  if(!rows.length){alert('Adicione pelo menos um material.');return;}
+  for(const r of rows){const o=db.purchaseOrders.find(x=>x.number===r.oc);const item=o?.items?.find(x=>x.reqNumber===r.req&&x.code===r.productCode);const rem=Number(item?.qty||0)-purchaseOrderDeliveredQty(o,item);if(!o||o.company!==supplier||!item||r.qty<=0||r.qty>rem+1e-9){alert(`A quantidade informada para ${r.productCode} ultrapassa o saldo disponível da OC.`);return;}}
+  const stamp=Date.now();rows.forEach((r,i)=>db.entries.push({id:stamp+i+Math.random(),createdAt:stamp+i,date,nf,supplier,req:r.req,oc:r.oc,productCode:r.productCode,qty:r.qty,unit:r.unit,unitValue:r.unitValue}));
+  ensureEntryNote(nf,supplier,date,rows);closeModal();save();alert('Entrada salva com sucesso e nota fiscal registrada em Notas Fiscais Gerais com finalidade Estoque.');
+}
+function delEntry(id){const e=db.entries.find(x=>String(x.id)===String(id));if(!e)return;if(!confirm('Excluir esta entrada? O estoque, o status da OC e a nota fiscal automática serão recalculados.'))return;db.entries=db.entries.filter(x=>String(x.id)!==String(id));const remaining=db.entries.filter(x=>String(x.nf)===String(e.nf)&&String(x.supplier)===String(e.supplier));const note=db.notes.find(n=>n.autoFromEntry&&String(n.number)===String(e.nf)&&String(n.supplier)===String(e.supplier));if(note){if(remaining.length){const reqs=remaining.map(r=>({req:r.req,oc:r.oc,code:r.productCode,qty:r.qty,unit:r.unit||productUnit(r.productCode),totalValue:Number(r.qty||0)*Number(r.unitValue||0)}));note.reqs=reqs;note.value=reqs.reduce((s,r)=>s+Number(r.totalValue||0),0);}else db.notes=db.notes.filter(n=>n!==note);}save();}
+
+function parseSpreadsheetNumber(v){let s=String(v??'').trim().replace(/R\$\s?/g,'').replace(/\s/g,'');if(!s)return 0;if(s.includes(',')&&s.includes('.')){if(s.lastIndexOf(',')>s.lastIndexOf('.'))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/,/g,'');}else if(s.includes(',')){s=s.replace(/\./g,'').replace(',','.');}return Number(s)||0;}
+function openXlsxImport(){
+  openModal('Importar estoque por Excel',`<div class="notice">A planilha deve conter, de preferência, as colunas: <b>Código</b>, <b>Produto/Nome</b>, <b>Unidade</b>, <b>Quantidade/Estoque</b>, <b>Valor Unitário</b>, <b>Mínimo</b> e <b>Centro de Custo</b>. Código e nome são obrigatórios. A primeira aba da planilha será utilizada.</div><div class="formgrid"><div><label>Arquivo Excel</label><input id="xlsxFile" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"></div><div><label>Como tratar a quantidade</label><select id="xlsxQtyMode"><option value="replace">Substituir estoque pelo valor da planilha</option><option value="add">Somar a quantidade da planilha ao estoque atual</option></select></div></div><div id="xlsxPreview" class="scroll"></div><div class="rowactions"><button type="button" class="btn" id="importXlsxBtn" disabled>Importar</button></div>`);
+  const file=document.getElementById('xlsxFile'),btn=document.getElementById('importXlsxBtn'),preview=document.getElementById('xlsxPreview');let parsed=[];
+  const normKey=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const getField=(r,names)=>{for(const n of names){const k=normKey(n);if(r[k]!==undefined&&r[k]!=='')return r[k];}return '';};
+  file.onchange=async()=>{
+    const f=file.files[0]; if(!f)return;
+    if(!/\.(xlsx|xls)$/i.test(f.name)){alert('Selecione um arquivo Excel .xlsx ou .xls.');file.value='';return;}
+    try{
+      if(typeof XLSX==='undefined'){
+        const ok=await (window.ensureXlsx?window.ensureXlsx():false);
+        if(!ok){alert('O leitor Excel não pôde ser carregado. Abra o arquivo com conexão à internet para carregar o componente de leitura.');return;}
+      }
+      const data=await f.arrayBuffer();
+      const wb=XLSX.read(data,{type:'array',cellDates:true});
+      if(!wb.SheetNames.length)throw new Error('A planilha não possui abas.');
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const raw=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
+      parsed=raw.map(row=>{const r={};Object.keys(row).forEach(k=>r[normKey(k)]=row[k]);return r;}).map(r=>({
+        code:String(getField(r,['codigo','codigointerno','cod','sku'])).trim(),
+        name:String(getField(r,['produto','produto/nome','nome','nomedoproduto','material'])).trim(),
+        unit:String(getField(r,['unidade','unidadedemedida','un'])).trim().toUpperCase()||'UN',
+        qty:parseSpreadsheetNumber(getField(r,['quantidade','estoque','qtd','saldo'])),
+        unitValue:parseSpreadsheetNumber(getField(r,['valorunitario','valorunit','preco','precounitario','custounitario','valor'])),
+        min:parseSpreadsheetNumber(getField(r,['minimo','estoqueminimo','min'])),
+        cc:formatCC(String(getField(r,['centrodecusto','cc','centrodecustos'])).trim())||'00.00-000'
+      })).filter(r=>r.code||r.name);
+      const errors=[];parsed.forEach((r,i)=>{if(!r.code)errors.push(`Linha ${i+2}: código não informado.`);if(!r.name)errors.push(`Linha ${i+2}: produto/nome não informado.`);if(r.qty<0)errors.push(`Linha ${i+2}: quantidade inválida.`);if(r.unitValue<0)errors.push(`Linha ${i+2}: valor unitário inválido.`);});
+      preview.innerHTML=`<div class="notice">${parsed.length} linha(s) encontrada(s). ${errors.length?`<span class="error">${errors.length} erro(s) encontrado(s); linhas com erro não serão importadas.</span>`:'Confira a prévia antes de importar.'}</div><table><thead><tr><th>Linha</th><th>Código</th><th>Produto</th><th>Unidade</th><th>Quantidade</th><th>Valor unit.</th><th>Mínimo</th><th>Centro de Custo</th></tr></thead><tbody>${parsed.slice(0,100).map((r,i)=>`<tr><td>${i+2}</td><td>${esc(r.code)}</td><td>${esc(r.name)}</td><td>${esc(r.unit)}</td><td>${qtyUnit(r.qty,r.unit)}</td><td>${money(r.unitValue)}</td><td>${qtyUnit(r.min,r.unit)}</td><td>${esc(r.cc)}</td></tr>`).join('')}</tbody></table>${parsed.length>100?'<p class="muted">Mostrando as primeiras 100 linhas na prévia.</p>':''}${errors.length?`<div class="notice error">${errors.slice(0,20).map(esc).join('<br>')}${errors.length>20?'<br>...':''}</div>`:''}`;
+      parsed=parsed.filter(r=>r.code&&r.name&&r.qty>=0&&r.unitValue>=0);btn.disabled=!parsed.length;
+    }catch(err){console.error(err);parsed=[];btn.disabled=true;preview.innerHTML='<div class="notice error">Não foi possível ler a planilha. Verifique se o arquivo é um .xlsx/.xls válido e se a primeira aba contém cabeçalhos na primeira linha.</div>';}
+  };
+  btn.onclick=()=>{
+    if(!parsed.length)return;
+    const mode=document.getElementById('xlsxQtyMode').value;let created=0,updated=0;
+    parsed.forEach(r=>{
+      let p=db.products.find(x=>String(x.code)===String(r.code));
+      if(!p){p={code:r.code,name:r.name,unit:r.unit,min:r.min,cc:r.cc,unitValue:r.unitValue};db.products.push(p);created++;}
+      else{p.name=r.name||p.name;p.unit=r.unit||p.unit||'UN';p.min=r.min;p.cc=r.cc||p.cc||'00.00-000';if(r.unitValue>0)p.unitValue=r.unitValue;updated++;}
+      if(r.unitValue>0)p.unitValue=r.unitValue;
+      const current=qty(p);const target=mode==='add'?current+r.qty:r.qty;const adjustment=target-current;
+      if(Math.abs(adjustment)>1e-12)db.inventories.push({id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),code:p.code,adjustment,source:'xlsx',file:f.name,unitValue:r.unitValue});
+    });
+    save();closeModal();alert(`Importação concluída. ${created} produto(s) criado(s) e ${updated} produto(s) atualizado(s). Quantidades e valores unitários foram processados.`);
+  };
+}
+
+// Print button aliases now use the unified print design above.
+
 </script>
 </body>
 </html>
